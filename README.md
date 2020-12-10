@@ -17,3 +17,8 @@ to install from source.
 
 After that you can run `chesster` from the command line.
 
+# Adding an AI
+To add an AI create a new file in `src/chesster/ai`.
+In it create a class that inherits from `BaseAi`.
+Last, add your new AI to `src/chesster/ai/__init__.py`.
+

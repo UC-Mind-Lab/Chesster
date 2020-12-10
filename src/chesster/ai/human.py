@@ -4,17 +4,20 @@ This is really just a wrapper around human input
 import chess
 
 from .base import BaseAI
+from ..timer.base import BaseTimer
 
 
 class Human(BaseAI):
     """Take in human input to select a legal move."""
-    def make_move(self, board:chess.Board) -> chess.Move:
+    def make_move(self, board:chess.Board, timer:BaseTimer) -> chess.Move:
         """Return a random legal move.
 
         Parameters
         ----------
         board: chess.Board
             The chessboard to analyze and make a move upon.
+        timer: BaseTimer
+            The timer associated with this AI for this game.
 
         Returns
         -------
@@ -30,11 +33,14 @@ class Human(BaseAI):
             try:
                 move = chess.Move.from_uci(uci)
                 if not board.is_legal(move):
-                    print("Illegal move, try again")
+                    print("Illegal move, try again.")
+                    print(f"{timer.seconds_left} seconds left")
                     # Reset to null move
                     move = chess.Move.null()
             except ValueError:
                 print("Incorrect UCI format, try again")
+                print(f"{timer.seconds_left} seconds left")
+
 
         # Return selected legal move
         return move

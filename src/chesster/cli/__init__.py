@@ -170,18 +170,18 @@ def cli_interface() -> None:
     except IllegalMove as exp:
         print(exp, file=sys.stderr)
         if exp.board.turn == chess.WHITE:
-            exit(-1)
+            exit(1)
         else:
-            exit(-2)
+            exit(2)
     except NonExistentAI as exp:
         print(exp, file=sys.stderr)
-        exit(-3)
+        exit(3)
     except FileExistsError as exp:
         print(f"Directory \"{exp}\" already exists.", file=sys.stderr)
-        exit(-4)
+        exit(4)
     except PermissionError as exp:
         print(exp, file=sys.stderr)
-        exit(-5)
+        exit(5)
 
 
 # Execute only if this file is being run as the entry file.

@@ -7,3 +7,13 @@ well as restrictions on the amount of time AI's are allowed to compute.
 Of course we also want the ability to view the game as it progresses and
 replay past games.
 Being able to play against the AI's as a human will also be a great touch.
+
+# Install
+Run:
+```
+pip install .
+```
+to install from source.
+
+After that you can run `chesster` from the command line.
+

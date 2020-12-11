@@ -6,6 +6,7 @@ import cairosvg
 import chess
 import chess.svg
 import os
+import pygame
 
 from ..ai.random import RandomAI
 from ..ai import AIs
@@ -41,22 +42,7 @@ class NonExistentTimer(Exception):
                 f"{','.join(timers.keys())}"
 
 
-def display_board(board:chess.Board, message:str) -> None:
-    """Display the given board.
-
-    Parameters
-    ----------
-    board: chess.Board
-        The board to display.
-    message: str
-        The extra message to display.
-    """
-    print(board)
-    print(message)
-    print("-"*16)
-
-
-def save_board(board:chess.Board, save_dir:str) -> str:
+def save_board(board:chess.Board, save_dir:str, width:int, height:int) -> str:
     """Save the given board in the given directory.
     File name will be the current turn number.
 
@@ -66,13 +52,25 @@ def save_board(board:chess.Board, save_dir:str) -> str:
         The board to display.
     save_dir: str
         The directory to save the file within.
+    width: int
+        The width of the image to save.
+    height: int
+        The height of the image to save.
+
+    Returns
+    -------
+    str
+        The path to the saved image of the board
     """
     save_name=os.path.join(save_dir, f"{len(board.move_stack):06}.png")
-    cairosvg.svg2png(bytestring=chess.svg.board(board), write_to=save_name)
+    cairosvg.svg2png(bytestring=chess.svg.board(board), write_to=save_name,
+            parent_width=width, parent_height=height)
+    return save_name
 
 
 def main(white:str, black:str, timer:str="IncrementTimer", start_seconds:int=600,
-        increment_seconds:int=2, save_dir:str="boards") -> int:
+        increment_seconds:int=2, save_dir:str="boards", width:int=500, 
+        height:int=500) -> int:
     """Main function.
 
     Parameters
@@ -90,6 +88,10 @@ def main(white:str, black:str, timer:str="IncrementTimer", start_seconds:int=600
     save_dir: str = "boards"
         The directory in which to save the images for the boards as the game 
         is played.
+    width: int=500
+        The width of the PyGame window.
+    height: int=500
+        The height of the PyGame window.
 
     Returns
     -------
@@ -139,34 +141,63 @@ def main(white:str, black:str, timer:str="IncrementTimer", start_seconds:int=600
     except KeyError:
         raise NonExistentTimer(timer)
 
-    # Run game
-    while not board.is_game_over() and whiteTimer.alive and blackTimer.alive:
-        # Display the board
-        if board.turn == chess.WHITE:
-            color = "White"
-            time_left = whiteTimer.seconds_left
+    # Initialize PyGame
+    pygame.init()
+    screen = pygame.display.set_mode((width, height))
+
+    # Prep sprite of board
+    def prep_board_sprite():
+        """Display the given board.
+        Note this function makes use of it's scope within main.
+        """
+        board_img_path = save_board(board, save_dir, width, height)
+        return pygame.image.load(board_img_path)
+
+
+    def draw() -> None:
+        """Draw everything on the screen.
+        Note this function makes use of it's scope within main.
+        """
+        # Black out the screen
+        screen.fill((0,0,0))
+        # Draw the board
+        screen.blit(prep_board_sprite(), (0,0))
+        # Push finished drawing of screen
+        pygame.display.flip()
+
+    # Run until told to quit
+    while True:
+        # Check for events.
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                # Clean exit
+                return 0
+
+        # Draw the board.
+        draw()
+
+        # Is game still valid?
+        if board.is_game_over() or not whiteTimer.alive or not blackTimer.alive:
+            # Game over
+            break
         else:
-            color = "Black"
-            time_left = blackTimer.seconds_left
-        display_board(board, f"{color}'s move with {time_left} seconds left.")
-        save_board(board, save_dir)
 
-        # Ask the AI to select a move
-        if board.turn == chess.WHITE:
-            whiteTimer.start()
-            move = whiteAI.make_move(board, whiteTimer)
-            whiteTimer.stop()
-        else:
-            blackTimer.start()
-            move = blackAI.make_move(board, blackTimer)
-            blackTimer.stop()
+            # Ask the AI to select a move
+            if board.turn == chess.WHITE:
+                whiteTimer.start()
+                move = whiteAI.make_move(board, whiteTimer)
+                whiteTimer.stop()
+            else:
+                blackTimer.start()
+                move = blackAI.make_move(board, blackTimer)
+                blackTimer.stop()
 
-        # Check that move is valid
-        if not board.is_legal(move):
-            raise IllegalMove(board, move, board)
+            # Check that move is valid
+            if not board.is_legal(move):
+                raise IllegalMove(board, move)
 
-        # Make the move
-        board.push(move)
+            # Make the move
+            board.push(move)
 
     # Display results
     if not whiteTimer.alive:
@@ -174,8 +205,7 @@ def main(white:str, black:str, timer:str="IncrementTimer", start_seconds:int=600
     elif not blackTimer.alive:
         print("Black ran out of time!")
     else:
-        display_board(board, f"Game Over\nResult: {board.result()}")
-        save_board(board, save_dir)
+        print(f"Game Over\nResult: {board.result()}")
     
     # Return success code
     return 0
@@ -205,6 +235,10 @@ def parse_arguments(args=None) -> None:
             help="The number of seconds to increment the timer after each move.")
     parser.add_argument("--save_dir", default="boards",
             help="The directory to save the board images to.")
+    parser.add_argument("--width", default=500, type=int,
+            help="The width of the PyGame window.")
+    parser.add_argument("--height", default=500, type=int,
+            help="The height of the PyGame window.")
     args = parser.parse_args(args=args)
     return args
 

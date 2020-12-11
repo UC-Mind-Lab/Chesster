@@ -10,7 +10,7 @@ from ..timer.base import BaseTimer
 class Human(BaseAI):
     """Take in human input to select a legal move."""
     def make_move(self, board:chess.Board, timer:BaseTimer) -> chess.Move:
-        """Return a random legal move.
+        """Return a legal move as selected by a human.
 
         Parameters
         ----------

@@ -181,7 +181,6 @@ def main(white:str, black:str, timer:str="IncrementTimer", start_seconds:int=600
             # Game over
             break
         else:
-
             # Ask the AI to select a move
             if board.turn == chess.WHITE:
                 whiteTimer.start()

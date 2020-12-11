@@ -220,9 +220,9 @@ def parse_arguments(args=None) -> None:
         sys.args.
     """
     parser = argparse.ArgumentParser(
-            description="Chesster: Facilitate AIs to battle with chess."\
-                    f"Available AIs:\n{','.join(sorted(AIs.keys()))}"\
-                    f"Available Timers:\n{','.join(sorted(timers.keys()))}",
+            description="Chesster: Facilitate AIs to battle with chess. "\
+                    f"Available AIs:\n{', '.join(sorted(AIs.keys()))}. "\
+                    f"Available Timers:\n{', '.join(sorted(timers.keys()))}.",
             formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("white", help="The AI for the white player.")
     parser.add_argument("black", help="The AI for the white player.")

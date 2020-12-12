@@ -5,8 +5,10 @@ import argparse
 import cairosvg
 import chess
 import chess.svg
+import multiprocessing as mp
 import os
 import pygame
+import tempfile
 
 from ..ai.random import RandomAI
 from ..ai import AIs
@@ -68,9 +70,9 @@ def save_board(board:chess.Board, save_dir:str, width:int, height:int) -> str:
     return save_name
 
 
-def main(white:str, black:str, timer:str="IncrementTimer", start_seconds:int=600,
-        increment_seconds:int=2, save_dir:str="boards", width:int=500, 
-        height:int=500) -> int:
+def main(white:str, black:str, timer:str="IncrementTimer", 
+        start_seconds:int=600, increment_seconds:int=2, save_dir:str=None,
+        width:int=400, height:int=600) -> int:
     """Main function.
 
     Parameters
@@ -79,18 +81,18 @@ def main(white:str, black:str, timer:str="IncrementTimer", start_seconds:int=600
         The name of the AI for the white player.
     black: str
         The name of the AI for the black player.
-    timer: str
+    timer: str="IncrementTimer"
         The name of the timer for each player.
     start_seconds: float=600
         The number of seconds to start the timer at.
+    save_dir: str=None
+        The directory in which to save the images for the boards as the game 
+        is played. If not specified it will be a temporary system folder.
     increment_seconds: float=2
         The number of seconds to increment the timer after each move.
-    save_dir: str = "boards"
-        The directory in which to save the images for the boards as the game 
-        is played.
-    width: int=500
+    width: int=400
         The width of the PyGame window.
-    height: int=500
+    height: int=600
         The height of the PyGame window.
 
     Returns
@@ -113,14 +115,23 @@ def main(white:str, black:str, timer:str="IncrementTimer", start_seconds:int=600
         Raised when there is insufficient permission to create/save files 
         with save_dir.
     """
-    # Ensure that the save_dir doesn't already exist
-    if os.path.exists(save_dir):
-        raise FileExistsError(save_dir)
+    # Temporary or specified folder for board images?
+    if save_dir is not None:
+        if os.path.exists(save_dir):
+            raise FileExistsError(save_dir)
+        else:
+            os.mkdir(save_dir)
     else:
-        os.mkdir(save_dir)
+        save_dir_handle = tempfile.TemporaryDirectory(prefix="chesster_")
+        save_dir = save_dir_handle.name
 
     # Generate a default board
     board = chess.Board()
+
+    # Create Queues for communication with AI in separate thread
+    queue = mp.Queue()
+    # Create empty process variable to determine if one is running or not
+    aiProcess = None
 
     # Setup white player AI
     try:
@@ -144,26 +155,64 @@ def main(white:str, black:str, timer:str="IncrementTimer", start_seconds:int=600
     # Initialize PyGame
     pygame.init()
     screen = pygame.display.set_mode((width, height))
+    font = pygame.font.SysFont(None, int(height*(1/8)))
 
     # Prep sprite of board
     def prep_board_sprite():
         """Display the given board.
         Note this function makes use of it's scope within main.
         """
-        board_img_path = save_board(board, save_dir, width, height)
+        # 2/3 of the screen is the board, the other 1/3 are for info
+        # above (1/6) and below (1/6) of the board.
+        board_img_path = save_board(board, save_dir, width, height*(2/3))
         return pygame.image.load(board_img_path)
 
 
     def draw() -> None:
         """Draw everything on the screen.
         Note this function makes use of it's scope within main.
+        
+        The board is structured as 1/6 of height of the bottom and top are for
+        info about the players.
+        The remaining 2/3 of height is for the board.
         """
+        def draw_ai_info(color:chess.COLORS) -> None:
+            """Draw the info for the AI of the specified AI color
+            Parameters
+            ----------
+            color: chess.COLORS
+                The color to draw the info of.
+            """
+            # Collect relevant info
+            if color == chess.WHITE:
+                name = whiteAI.__class__.__name__
+                time = whiteTimer.display_time()
+                start_height = height*5/6
+            else:
+                name = blackAI.__class__.__name__
+                time = blackTimer.display_time()
+                start_height = 0
+
+            # Render images
+            name_img = font.render(name, True, (255,255,255))
+            time_img = font.render(time, True, (255,255,255))
+            # Calculate image placements
+            name_placment = (width*0.001, start_height)
+            time_placment = (width*0.001, start_height+(height*(1/12)))
+            # Display images
+            screen.blit(name_img, name_placment)
+            screen.blit(time_img, time_placment)
+
+            
         # Black out the screen
         screen.fill((0,0,0))
         # Draw the board
-        screen.blit(prep_board_sprite(), (0,0))
+        screen.blit(prep_board_sprite(), (0,height*(1/6)))
+        # Draw ai info
+        draw_ai_info(chess.WHITE)
+        draw_ai_info(chess.BLACK)
         # Push finished drawing of screen
-        pygame.display.flip()
+        pygame.display.update()
 
     # Run until told to quit
     while True:
@@ -181,22 +230,64 @@ def main(white:str, black:str, timer:str="IncrementTimer", start_seconds:int=600
             # Game over
             break
         else:
-            # Ask the AI to select a move
-            if board.turn == chess.WHITE:
-                whiteTimer.start()
-                move = whiteAI.make_move(board, whiteTimer)
-                whiteTimer.stop()
+            # Has the AI computed their move?
+            if queue.qsize() >= 1:
+                # Stop the timer
+                if board.turn == chess.WHITE:
+                    whiteTimer.stop()
+                else:
+                    blackTimer.stop()
+
+                # Remove the move from the queue
+                move = queue.get()
+
+                # Delete the previous AI process
+                aiProcess = None
+
+                # Check that move is valid
+                if not board.is_legal(move):
+                    raise IllegalMove(board, move)
+
+                # Make the move
+                board.push(move)
+
+            # Does an AI process already exist?
+            elif aiProcess is not None:
+                # Do nothing, we're simply waiting
+                pass
+            # There is no move available, nor is there a process running.
             else:
-                blackTimer.start()
-                move = blackAI.make_move(board, blackTimer)
-                blackTimer.stop()
+                def request_move(q:mp.Queue, board:chess.Board, ai:'BaseAi', 
+                        timer:'BaseTimer') -> None:
+                    """Actions for an AI thread to perform.
+                    Parameters
+                    ----------
+                    q: multiprocessing.Queue
+                        The queue to push the calculated move to.
+                    board: chess.Board
+                        The board the AI will be calculating a move upon.
+                    ai: chesster.ai.base.BaseAI
+                        A Chesster AI that will calculate a move.
+                    timer: chesster.timer.base.BaseTimer
+                        The timer associated with the AI
+                    """
+                    move = ai.make_move(board, timer)
+                    q.put(move)
 
-            # Check that move is valid
-            if not board.is_legal(move):
-                raise IllegalMove(board, move)
+                # Ask the AI to select a move
+                if board.turn == chess.WHITE:
+                    whiteTimer.start()
+                    aiProcess = mp.Process(
+                            target=request_move,
+                            args=(queue, board, whiteAI, whiteTimer))
+                else:
+                    blackTimer.start()
+                    aiProcess = mp.Process(
+                            target=request_move,
+                            args=(queue, board, blackAI, blackTimer))
+                # Start the process
+                aiProcess.start()
 
-            # Make the move
-            board.push(move)
 
     # Display results
     if not whiteTimer.alive:
@@ -232,11 +323,12 @@ def parse_arguments(args=None) -> None:
             help="The number of seconds to star the timer at.")
     parser.add_argument("--increment_seconds", default=2, type=float,
             help="The number of seconds to increment the timer after each move.")
-    parser.add_argument("--save_dir", default="boards",
-            help="The directory to save the board images to.")
-    parser.add_argument("--width", default=500, type=int,
+    parser.add_argument("--save_dir", default=None,
+            help="The directory to save the board images to. If not specified "\
+            "it will be a temporary system folder.")
+    parser.add_argument("--width", default=400, type=int,
             help="The width of the PyGame window.")
-    parser.add_argument("--height", default=500, type=int,
+    parser.add_argument("--height", default=600, type=int,
             help="The height of the PyGame window.")
     args = parser.parse_args(args=args)
     return args

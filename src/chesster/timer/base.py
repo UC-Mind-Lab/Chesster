@@ -44,6 +44,24 @@ class BaseTimer(abc.ABC):
         return self._seconds_left - self._elapsed_seconds()
 
 
+    def display_time(self) -> str:
+        """Return nicely formatted string of minutes and seconds left.
+
+        Returns
+        -------
+        str
+            The number of minutes and seconds left on the timer
+        """
+        # Get the time left at this exact moment of the method call
+        seconds_left = self.seconds_left
+        # Calculate the minutes and seconds
+        minutes = int(seconds_left // 60)
+        seconds = int(seconds_left % 60)
+        milliseconds = int(seconds_left % 60 % 1 * 100)
+        # Return formatted text
+        return f"{minutes:02}:{seconds:02}:{milliseconds:02}"
+
+
     def start(self) -> None:
         """Start the timer
 

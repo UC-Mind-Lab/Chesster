@@ -7,6 +7,7 @@ import chess
 import chess.svg
 import os
 import pygame
+import tempfile
 
 from ..ai.random import RandomAI
 from ..ai import AIs
@@ -68,9 +69,9 @@ def save_board(board:chess.Board, save_dir:str, width:int, height:int) -> str:
     return save_name
 
 
-def main(white:str, black:str, timer:str="IncrementTimer", start_seconds:int=600,
-        increment_seconds:int=2, save_dir:str="boards", width:int=500, 
-        height:int=500) -> int:
+def main(white:str, black:str, timer:str="IncrementTimer", 
+        start_seconds:int=600, increment_seconds:int=2, save_dir:str=None,
+        width:int=500, height:int=500) -> int:
     """Main function.
 
     Parameters
@@ -79,15 +80,15 @@ def main(white:str, black:str, timer:str="IncrementTimer", start_seconds:int=600
         The name of the AI for the white player.
     black: str
         The name of the AI for the black player.
-    timer: str
+    timer: str="IncrementTimer"
         The name of the timer for each player.
     start_seconds: float=600
         The number of seconds to start the timer at.
+    save_dir: str=None
+        The directory in which to save the images for the boards as the game 
+        is played. If not specified it will be a temporary system folder.
     increment_seconds: float=2
         The number of seconds to increment the timer after each move.
-    save_dir: str = "boards"
-        The directory in which to save the images for the boards as the game 
-        is played.
     width: int=500
         The width of the PyGame window.
     height: int=500
@@ -113,11 +114,15 @@ def main(white:str, black:str, timer:str="IncrementTimer", start_seconds:int=600
         Raised when there is insufficient permission to create/save files 
         with save_dir.
     """
-    # Ensure that the save_dir doesn't already exist
-    if os.path.exists(save_dir):
-        raise FileExistsError(save_dir)
+    # Temporary or specified folder for board images?
+    if save_dir is not None:
+        if os.path.exists(save_dir):
+            raise FileExistsError(save_dir)
+        else:
+            os.mkdir(save_dir)
     else:
-        os.mkdir(save_dir)
+        save_dir_handle = tempfile.TemporaryDirectory(prefix="chesster_")
+        save_dir = save_dir_handle.name
 
     # Generate a default board
     board = chess.Board()
@@ -232,8 +237,9 @@ def parse_arguments(args=None) -> None:
             help="The number of seconds to star the timer at.")
     parser.add_argument("--increment_seconds", default=2, type=float,
             help="The number of seconds to increment the timer after each move.")
-    parser.add_argument("--save_dir", default="boards",
-            help="The directory to save the board images to.")
+    parser.add_argument("--save_dir", default=None,
+            help="The directory to save the board images to. If not specified "\
+            "it will be a temporary system folder.")
     parser.add_argument("--width", default=500, type=int,
             help="The width of the PyGame window.")
     parser.add_argument("--height", default=500, type=int,

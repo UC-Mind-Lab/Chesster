@@ -71,7 +71,7 @@ def save_board(board:chess.Board, save_dir:str, width:int, height:int) -> str:
 
 def main(white:str, black:str, timer:str="IncrementTimer", 
         start_seconds:int=600, increment_seconds:int=2, save_dir:str=None,
-        width:int=500, height:int=500) -> int:
+        width:int=400, height:int=600) -> int:
     """Main function.
 
     Parameters
@@ -89,9 +89,9 @@ def main(white:str, black:str, timer:str="IncrementTimer",
         is played. If not specified it will be a temporary system folder.
     increment_seconds: float=2
         The number of seconds to increment the timer after each move.
-    width: int=500
+    width: int=400
         The width of the PyGame window.
-    height: int=500
+    height: int=600
         The height of the PyGame window.
 
     Returns
@@ -149,26 +149,57 @@ def main(white:str, black:str, timer:str="IncrementTimer",
     # Initialize PyGame
     pygame.init()
     screen = pygame.display.set_mode((width, height))
+    font = pygame.font.SysFont(None, int(height*(1/8)))
 
     # Prep sprite of board
     def prep_board_sprite():
         """Display the given board.
         Note this function makes use of it's scope within main.
         """
-        board_img_path = save_board(board, save_dir, width, height)
+        # 2/3 of the screen is the board, the other 1/3 are for info
+        # above (1/6) and below (1/6) of the board.
+        board_img_path = save_board(board, save_dir, width, height*(2/3))
         return pygame.image.load(board_img_path)
 
 
     def draw() -> None:
         """Draw everything on the screen.
         Note this function makes use of it's scope within main.
+        
+        The board is structured as 1/6 of height of the bottom and top are for
+        info about the players.
+        The remaining 2/3 of height is for the board.
         """
+        def draw_player_info(color:chess.COLORS) -> None:
+            # Collect relevant info
+            if color == chess.WHITE:
+                name = whiteAI.__class__.__name__
+                time = whiteTimer.display_time()
+                start_height = height*5/6
+            else:
+                name = blackAI.__class__.__name__
+                time = blackTimer.display_time()
+                start_height = 0
+            # Render images
+            name_img = font.render(name, True, (255,255,255))
+            time_img = font.render(time, True, (255,255,255))
+            # Calculate image placements
+            name_placment = (width*0.001, start_height)
+            time_placment = (width*0.001, start_height+(height*(1/12)))
+            # Display images
+            screen.blit(name_img, name_placment)
+            screen.blit(time_img, time_placment)
+
+            
         # Black out the screen
         screen.fill((0,0,0))
         # Draw the board
-        screen.blit(prep_board_sprite(), (0,0))
+        screen.blit(prep_board_sprite(), (0,height*(1/6)))
+        # Draw player info
+        draw_player_info(chess.WHITE)
+        draw_player_info(chess.BLACK)
         # Push finished drawing of screen
-        pygame.display.flip()
+        pygame.display.update()
 
     # Run until told to quit
     while True:
@@ -240,9 +271,9 @@ def parse_arguments(args=None) -> None:
     parser.add_argument("--save_dir", default=None,
             help="The directory to save the board images to. If not specified "\
             "it will be a temporary system folder.")
-    parser.add_argument("--width", default=500, type=int,
+    parser.add_argument("--width", default=400, type=int,
             help="The width of the PyGame window.")
-    parser.add_argument("--height", default=500, type=int,
+    parser.add_argument("--height", default=600, type=int,
             help="The height of the PyGame window.")
     args = parser.parse_args(args=args)
     return args

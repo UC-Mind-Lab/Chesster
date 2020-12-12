@@ -5,6 +5,7 @@ import argparse
 import cairosvg
 import chess
 import chess.svg
+import multiprocessing as mp
 import os
 import pygame
 import tempfile
@@ -127,6 +128,11 @@ def main(white:str, black:str, timer:str="IncrementTimer",
     # Generate a default board
     board = chess.Board()
 
+    # Create Queues for communication with AI in separate thread
+    queue = mp.Queue()
+    # Create empty process variable to determine if one is running or not
+    aiProcess = None
+
     # Setup white player AI
     try:
         whiteAI = AIs[white]()
@@ -217,22 +223,64 @@ def main(white:str, black:str, timer:str="IncrementTimer",
             # Game over
             break
         else:
-            # Ask the AI to select a move
-            if board.turn == chess.WHITE:
-                whiteTimer.start()
-                move = whiteAI.make_move(board, whiteTimer)
-                whiteTimer.stop()
+            # Has the AI computed their move?
+            if queue.qsize() >= 1:
+                # Stop the timer
+                if board.turn == chess.WHITE:
+                    whiteTimer.stop()
+                else:
+                    blackTimer.stop()
+
+                # Remove the move from the queue
+                move = queue.get()
+
+                # Delete the previous AI process
+                aiProcess = None
+
+                # Check that move is valid
+                if not board.is_legal(move):
+                    raise IllegalMove(board, move)
+
+                # Make the move
+                board.push(move)
+
+            # Does an AI process already exist?
+            elif aiProcess is not None:
+                # Do nothing, we're simply waiting
+                pass
+            # There is no move available, nor is there a process running.
             else:
-                blackTimer.start()
-                move = blackAI.make_move(board, blackTimer)
-                blackTimer.stop()
+                def request_move(q:mp.Queue, board:chess.Board, ai:'BaseAi', 
+                        timer:'BaseTimer') -> None:
+                    """Actions for an AI thread to perform.
+                    Parameters
+                    ----------
+                    q: multiprocessing.Queue
+                        The queue to push the calculated move to.
+                    board: chess.Board
+                        The board the AI will be calculating a move upon.
+                    ai: chesster.ai.base.BaseAI
+                        A Chesster AI that will calculate a move.
+                    timer: chesster.timer.base.BaseTimer
+                        The timer associated with the AI
+                    """
+                    move = ai.make_move(board, timer)
+                    q.put(move)
 
-            # Check that move is valid
-            if not board.is_legal(move):
-                raise IllegalMove(board, move)
+                # Ask the AI to select a move
+                if board.turn == chess.WHITE:
+                    whiteTimer.start()
+                    aiProcess = mp.Process(
+                            target=request_move,
+                            args=(queue, board, whiteAI, whiteTimer))
+                else:
+                    blackTimer.start()
+                    aiProcess = mp.Process(
+                            target=request_move,
+                            args=(queue, board, blackAI, blackTimer))
+                # Start the process
+                aiProcess.start()
 
-            # Make the move
-            board.push(move)
 
     # Display results
     if not whiteTimer.alive:

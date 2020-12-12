@@ -37,6 +37,8 @@ class Human(BaseAI):
             while not bool(move):
                 # Get user input
                 uci = input("Select move in UCI format: ")
+                # Clean up input (no spaces, all lowercase)
+                uci = "".join(uci.split()).lower()
                 # Attempt to parse out input
                 try:
                     move = chess.Move.from_uci(uci)

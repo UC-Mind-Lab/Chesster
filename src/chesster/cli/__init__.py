@@ -176,7 +176,13 @@ def main(white:str, black:str, timer:str="IncrementTimer",
         info about the players.
         The remaining 2/3 of height is for the board.
         """
-        def draw_player_info(color:chess.COLORS) -> None:
+        def draw_ai_info(color:chess.COLORS) -> None:
+            """Draw the info for the AI of the specified AI color
+            Parameters
+            ----------
+            color: chess.COLORS
+                The color to draw the info of.
+            """
             # Collect relevant info
             if color == chess.WHITE:
                 name = whiteAI.__class__.__name__
@@ -186,6 +192,7 @@ def main(white:str, black:str, timer:str="IncrementTimer",
                 name = blackAI.__class__.__name__
                 time = blackTimer.display_time()
                 start_height = 0
+
             # Render images
             name_img = font.render(name, True, (255,255,255))
             time_img = font.render(time, True, (255,255,255))
@@ -201,9 +208,9 @@ def main(white:str, black:str, timer:str="IncrementTimer",
         screen.fill((0,0,0))
         # Draw the board
         screen.blit(prep_board_sprite(), (0,height*(1/6)))
-        # Draw player info
-        draw_player_info(chess.WHITE)
-        draw_player_info(chess.BLACK)
+        # Draw ai info
+        draw_ai_info(chess.WHITE)
+        draw_ai_info(chess.BLACK)
         # Push finished drawing of screen
         pygame.display.update()
 

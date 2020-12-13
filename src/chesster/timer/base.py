@@ -88,8 +88,13 @@ class BaseTimer(abc.ABC):
         self._start_time = time.perf_counter()
 
 
-    def stop(self) -> None:
+    def stop(self) -> float:
         """Stop the timer
+
+        Returns
+        -------
+        float
+            The number of seconds that passed from start to stop.
 
         Raises
         ------
@@ -102,6 +107,8 @@ class BaseTimer(abc.ABC):
         self._seconds_left -= elapsed
         self._time_clocked += elapsed
         self._start_time = None
+        # Return the number of seconds that elapsed
+        return elapsed
 
 
     def _elapsed_seconds(self) -> float:

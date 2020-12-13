@@ -71,7 +71,7 @@ def save_board(board:chess.Board, board_dir:str, width:int, height:int) -> str:
     return save_name
 
 
-def main(white:str, black:str, timer:str="IncrementTimer", 
+def main(white:str, black:str, timer:str="BronsteinDelayTimer", 
         start_seconds:int=600, increment_seconds:int=2, board_dir:str=None,
         frame_dir:str=None, output_gif:str=None, width:int=400,
         height:int=600) -> int:
@@ -83,7 +83,7 @@ def main(white:str, black:str, timer:str="IncrementTimer",
         The name of the AI for the white player.
     black: str
         The name of the AI for the black player.
-    timer: str="IncrementTimer"
+    timer: str="BronsteinDelayTimer"
         The name of the timer for each player.
     start_seconds: float=600
         The number of seconds to start the timer at.
@@ -369,7 +369,7 @@ def parse_arguments(args=None) -> None:
             formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("white", help="The AI for the white player.")
     parser.add_argument("black", help="The AI for the white player.")
-    parser.add_argument("--timer", default="IncrementTimer",
+    parser.add_argument("--timer", default="BronsteinDelayTimer",
             help="The timer to use for players.")
     parser.add_argument("--start_seconds", default=600, type=float,
             help="The number of seconds to star the timer at.")

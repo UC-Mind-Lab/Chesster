@@ -44,7 +44,7 @@ class NonExistentTimer(Exception):
                 f"{','.join(timers.keys())}"
 
 
-def save_board(board:chess.Board, save_dir:str, width:int, height:int) -> str:
+def save_board(board:chess.Board, board_dir:str, width:int, height:int) -> str:
     """Save the given board in the given directory.
     File name will be the current turn number.
 
@@ -52,7 +52,7 @@ def save_board(board:chess.Board, save_dir:str, width:int, height:int) -> str:
     ----------
     board: chess.Board
         The board to display.
-    save_dir: str
+    board_dir: str
         The directory to save the file within.
     width: int
         The width of the image to save.
@@ -64,15 +64,15 @@ def save_board(board:chess.Board, save_dir:str, width:int, height:int) -> str:
     str
         The path to the saved image of the board
     """
-    save_name=os.path.join(save_dir, f"{len(board.move_stack):06}.png")
+    save_name=os.path.join(board_dir, f"{len(board.move_stack):06}.png")
     cairosvg.svg2png(bytestring=chess.svg.board(board), write_to=save_name,
             parent_width=width, parent_height=height)
     return save_name
 
 
 def main(white:str, black:str, timer:str="IncrementTimer", 
-        start_seconds:int=600, increment_seconds:int=2, save_dir:str=None,
-        width:int=400, height:int=600) -> int:
+        start_seconds:int=600, increment_seconds:int=2, board_dir:str=None,
+        frame_dir:str=None, width:int=400, height:int=600) -> int:
     """Main function.
 
     Parameters
@@ -85,7 +85,10 @@ def main(white:str, black:str, timer:str="IncrementTimer",
         The name of the timer for each player.
     start_seconds: float=600
         The number of seconds to start the timer at.
-    save_dir: str=None
+    board_dir: str=None
+        The directory in which to save the images for the boards as the game 
+        is played. If not specified it will be a temporary system folder.
+    frame_dir: str=None
         The directory in which to save the images for the boards as the game 
         is played. If not specified it will be a temporary system folder.
     increment_seconds: float=2
@@ -110,20 +113,27 @@ def main(white:str, black:str, timer:str="IncrementTimer",
     NonExistentTimer
         Occurs if the specified timer is not a correct key for known timers.
     FileExistsError
-        Raised when the save_dir path already exists.
+        Raised when the board_dir path already exists.
     PermissionError:
         Raised when there is insufficient permission to create/save files 
-        with save_dir.
+        with board_dir.
     """
     # Temporary or specified folder for board images?
-    if save_dir is not None:
-        if os.path.exists(save_dir):
-            raise FileExistsError(save_dir)
+    if board_dir is not None:
+        if os.path.exists(board_dir):
+            raise FileExistsError(board_dir)
         else:
-            os.mkdir(save_dir)
+            os.mkdir(board_dir)
     else:
-        save_dir_handle = tempfile.TemporaryDirectory(prefix="chesster_")
-        save_dir = save_dir_handle.name
+        board_dir_handle = tempfile.TemporaryDirectory(prefix="chesster_board_")
+        board_dir = board_dir_handle.name
+
+    # If the user wants to keep the frames, does the folder already exist?
+    if frame_dir is not None:
+        if os.path.exists(frame_dir):
+            raise FileExistsError(frame_dir)
+        else:
+            os.mkdir(frame_dir)
 
     # Generate a default board
     board = chess.Board()
@@ -156,6 +166,7 @@ def main(white:str, black:str, timer:str="IncrementTimer",
     pygame.init()
     screen = pygame.display.set_mode((width, height))
     font = pygame.font.SysFont(None, int(height*(1/8)))
+    frame = 0
 
     # Prep sprite of board
     def prep_board_sprite():
@@ -164,17 +175,26 @@ def main(white:str, black:str, timer:str="IncrementTimer",
         """
         # 2/3 of the screen is the board, the other 1/3 are for info
         # above (1/6) and below (1/6) of the board.
-        board_img_path = save_board(board, save_dir, width, height*(2/3))
+        board_img_path = save_board(board, board_dir, width, height*(2/3))
         return pygame.image.load(board_img_path)
 
 
-    def draw() -> None:
+    def draw(frame=[0]) -> None:
         """Draw everything on the screen.
         Note this function makes use of it's scope within main.
         
         The board is structured as 1/6 of height of the bottom and top are for
         info about the players.
         The remaining 2/3 of height is for the board.
+
+        Parameters
+        ----------
+        frame
+            This is a bad hack to implement a consistent variable when
+            ever this method is called. It will be removed when this
+            entire file is refactored. It is here currently as the author
+            is unfamiliar with PyGame, and this is all basically a proof
+            of concept.
         """
         def draw_ai_info(color:chess.COLORS) -> None:
             """Draw the info for the AI of the specified AI color
@@ -213,6 +233,12 @@ def main(white:str, black:str, timer:str="IncrementTimer",
         draw_ai_info(chess.BLACK)
         # Push finished drawing of screen
         pygame.display.update()
+        # Save frame
+        if frame_dir is not None:
+            pygame.image.save(screen, os.path.join(
+                frame_dir, 
+                f"{frame[0]:08}.png"))
+            frame[0] += 1
 
     # Run until told to quit
     while True:
@@ -323,8 +349,11 @@ def parse_arguments(args=None) -> None:
             help="The number of seconds to star the timer at.")
     parser.add_argument("--increment_seconds", default=2, type=float,
             help="The number of seconds to increment the timer after each move.")
-    parser.add_argument("--save_dir", default=None,
+    parser.add_argument("--board_dir", default=None,
             help="The directory to save the board images to. If not specified "\
+            "it will be a temporary system folder.")
+    parser.add_argument("--frame_dir", default=None,
+            help="The directory to save the frame images to. If not specified "\
             "it will be a temporary system folder.")
     parser.add_argument("--width", default=400, type=int,
             help="The width of the PyGame window.")

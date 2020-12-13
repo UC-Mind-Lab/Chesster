@@ -18,6 +18,7 @@ class BaseTimer(abc.ABC):
         """
         self._seconds_left = start_seconds
         self._start_time = None
+        self._time_clocked = 0
 
 
     @property
@@ -42,6 +43,18 @@ class BaseTimer(abc.ABC):
             The number of seconds left on the timer
         """
         return self._seconds_left - self._elapsed_seconds()
+
+
+    @property
+    def time_clocked(self) -> float:
+        """Return the number of seconds the timer has clocked
+
+        Returns
+        -------
+        float
+            The number of seconds the timer has clocked.
+        """
+        return self._time_clocked + self._elapsed_seconds()
 
 
     def display_time(self) -> str:
@@ -85,7 +98,9 @@ class BaseTimer(abc.ABC):
         """
         if self._start_time is None:
             raise TimerError("Timer is not running")
-        self._seconds_left -= self._elapsed_seconds()
+        elapsed = self._elapsed_seconds()
+        self._seconds_left -= elapsed
+        self._time_clocked += elapsed
         self._start_time = None
 
 

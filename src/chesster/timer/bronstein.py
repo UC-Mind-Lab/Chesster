@@ -15,21 +15,7 @@ class BronsteinDelayTimer(BaseTimer):
         increment_seconds: float
             The maximum number of seconds to increment after each move.
         """
-        super().__init__(start_seconds)
-        self._increment_seconds = increment_seconds
-
-
-    @property
-    def incrment_seconds(self) -> float:
-        """Return the number of seconds that is added to the timer after each 
-        move.
-
-        Returns
-        -------
-        float
-            The number of seconds that is added to the timer after each move.
-        """
-        return self._increment_seconds
+        super().__init__(start_seconds, increment_seconds)
 
 
     def stop(self) -> None:

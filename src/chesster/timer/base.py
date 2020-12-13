@@ -8,7 +8,7 @@ class TimerError(Exception):
 
 
 class BaseTimer(abc.ABC):
-    def __init__(self, start_seconds:float):
+    def __init__(self, start_seconds:float, increment_seconds:float):
         """BaseTimer
 
         Parameters
@@ -19,6 +19,7 @@ class BaseTimer(abc.ABC):
         self._seconds_left = start_seconds
         self._start_time = None
         self._time_clocked = 0
+        self._increment_seconds = increment_seconds
 
 
     @property
@@ -46,6 +47,19 @@ class BaseTimer(abc.ABC):
 
 
     @property
+    def incrment_seconds(self) -> float:
+        """Return the number of seconds that is added to the timer after each 
+        move.
+
+        Returns
+        -------
+        float
+            The number of seconds that is added to the timer after each move.
+        """
+        return self._increment_seconds
+
+
+    @property
     def time_clocked(self) -> float:
         """Return the number of seconds the timer has clocked
 
@@ -57,6 +71,28 @@ class BaseTimer(abc.ABC):
         return self._time_clocked + self._elapsed_seconds()
 
 
+    @staticmethod
+    def seconds_to_string(seconds: float) -> str:
+        """Return nicely formatted string of minutes, seconds, and milliseconds
+
+        Parameters
+        ----------
+        seconds: float
+            The number of seconds to convert
+
+        Returns
+        -------
+        str
+            The converted seconds
+        """
+        # Calculate the minutes and seconds
+        minutes = int(seconds // 60)
+        secs = int(seconds % 60)
+        milliseconds = int(seconds % 60 % 1 * 100)
+        # Return formatted text
+        return f"{minutes:02}:{secs:02}:{milliseconds:02}"
+
+
     def display_time(self) -> str:
         """Return nicely formatted string of minutes and seconds left.
 
@@ -65,14 +101,7 @@ class BaseTimer(abc.ABC):
         str
             The number of minutes and seconds left on the timer
         """
-        # Get the time left at this exact moment of the method call
-        seconds_left = self.seconds_left
-        # Calculate the minutes and seconds
-        minutes = int(seconds_left // 60)
-        seconds = int(seconds_left % 60)
-        milliseconds = int(seconds_left % 60 % 1 * 100)
-        # Return formatted text
-        return f"{minutes:02}:{seconds:02}:{milliseconds:02}"
+        return self.seconds_to_string(self.seconds_left)
 
 
     def start(self) -> None:

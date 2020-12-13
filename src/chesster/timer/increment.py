@@ -13,8 +13,7 @@ class IncrementTimer(BaseTimer):
         increment_seconds: float
             The number of seconds to increment after each move.
         """
-        super().__init__(start_seconds)
-        self._increment_seconds = increment_seconds
+        super().__init__(start_seconds, increment_seconds)
 
 
     @property

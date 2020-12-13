@@ -7,6 +7,7 @@ import chess
 import chess.svg
 import multiprocessing as mp
 import os
+import PIL
 import pygame
 import tempfile
 
@@ -72,7 +73,8 @@ def save_board(board:chess.Board, board_dir:str, width:int, height:int) -> str:
 
 def main(white:str, black:str, timer:str="IncrementTimer", 
         start_seconds:int=600, increment_seconds:int=2, board_dir:str=None,
-        frame_dir:str=None, width:int=400, height:int=600) -> int:
+        frame_dir:str=None, output_gif:str=None, width:int=400,
+        height:int=600) -> int:
     """Main function.
 
     Parameters
@@ -85,14 +87,16 @@ def main(white:str, black:str, timer:str="IncrementTimer",
         The name of the timer for each player.
     start_seconds: float=600
         The number of seconds to start the timer at.
+    increment_seconds: float=2
+        The number of seconds to increment the timer after each move.
     board_dir: str=None
         The directory in which to save the images for the boards as the game 
         is played. If not specified it will be a temporary system folder.
     frame_dir: str=None
         The directory in which to save the images for the boards as the game 
         is played. If not specified it will be a temporary system folder.
-    increment_seconds: float=2
-        The number of seconds to increment the timer after each move.
+    output_gif: str=None
+        The name of the gif to output the whole game to.
     width: int=400
         The width of the PyGame window.
     height: int=600
@@ -134,6 +138,14 @@ def main(white:str, black:str, timer:str="IncrementTimer",
             raise FileExistsError(frame_dir)
         else:
             os.mkdir(frame_dir)
+    elif output_gif is not None:
+        frame_dir_handle = tempfile.TemporaryDirectory(prefix="chesster_frame_")
+        frame_dir = frame_dir_handle.name
+
+    # Check if the output gif (if specified) already exists
+    if output_gif is not None:
+        if os.path.exists(output_gif):
+            raise FileExistsError(output_gif)
 
     # Generate a default board
     board = chess.Board()
@@ -322,6 +334,20 @@ def main(white:str, black:str, timer:str="IncrementTimer",
         print("Black ran out of time!")
     else:
         print(f"Game Over\nResult: {board.result()}")
+
+    # Save all the frames into a gif (if applicable)
+    if output_gif is not None:
+        def frames_iter():
+            for root, dirs, files in os.walk(frame_dir, topdown=False):
+                for image in sorted(files):
+                    yield PIL.Image.open(os.path.join(root, image))
+        it = frames_iter()
+        first = next(it)
+        first.save(output_gif,
+                   save_all=True,
+                   append_images=it,
+                   duration=10,
+                   loop=0)
     
     # Return success code
     return 0
@@ -355,6 +381,8 @@ def parse_arguments(args=None) -> None:
     parser.add_argument("--frame_dir", default=None,
             help="The directory to save the frame images to. If not specified "\
             "it will be a temporary system folder.")
+    parser.add_argument("--output_gif", default=None,
+            help="The name of the gif to save the whole game to.")
     parser.add_argument("--width", default=400, type=int,
             help="The width of the PyGame window.")
     parser.add_argument("--height", default=600, type=int,

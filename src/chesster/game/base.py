@@ -73,43 +73,42 @@ class GameResult:
         # Was it a simple checkmate?
         if self.board.is_checkmate():
             self._color = self.board.turn
-            self._reason = "Checkmate"
+            self._reason = "checkmate"
         else:
             if self.illegal_move is not None:
                 self._color = not self.illegal_move.offending_color
-                self._reason = "Illegal move by "\
-                        f"{self.illegal_move.offending_color_name}"
+                self._reason = "illegal move"
             else:
                 # Check for time outs
                 if not self.black_timer.alive:
                     self._color = chess.WHITE
-                    self._reason = "Black ran out of time"
+                    self._reason = "time out"
                 elif not self.white_timer.alive:
                     self._color = chess.BLACK
-                    self._reason = "White ran out of time"
+                    self._reason = "time out"
                 # Compare time left on timer
                 elif self.white_timer.seconds_left \
                         > self.black_timer.seconds_left:
                     self._color = chess.WHITE
-                    self._reason = "White has more time on timer"
+                    self._reason = "more time on timer"
                 elif self.black_timer.seconds_left \
                         > self.white_timer.seconds_left:
                     self._color = chess.BLACK
-                    self._reason = "Black has more time on timer"
+                    self._reason = "more time on timer"
 
                 # Compare total time spent
                 elif self.white_timer.time_clocked \
                         < self.black_timer.time_clocked:
                     self._color = chess.WHITE
-                    self._reason = "White has spent less time computing"
+                    self._reason = "less time computing"
                 elif self.black_timer.time_clocked \
                         < self.white_timer.time_clocked:
                     self._color = chess.BLACK
-                    self._reason = "Black has spent less time computing"
+                    self._reason = "less time computing"
                 else:
                     # Complete tie, nothing can be done
                     self._color = None
-                    self._reason = "Total tie"
+                    self._reason = "total tie"
 
 
     @property

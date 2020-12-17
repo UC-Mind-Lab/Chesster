@@ -72,7 +72,7 @@ class GameResult:
         """
         # Was it a simple checkmate?
         if self.board.is_checkmate():
-            self._color = self.board.turn
+            self._color = not self.board.turn
             self._reason = "checkmate"
         else:
             if self.illegal_move is not None:

@@ -32,7 +32,7 @@ class NonExistentTimer(Exception):
 def main(white:str, black:str, timer:str="BronsteinDelayTimer", 
         start_seconds:int=600, increment_seconds:int=2, board_dir:str=None,
         frame_dir:str=None, output_gif:str=None, width:int=400,
-        height:int=600) -> int:
+        height:int=600, win_screen_time:float=5) -> int:
     """Main function.
 
     Parameters
@@ -59,6 +59,8 @@ def main(white:str, black:str, timer:str="BronsteinDelayTimer",
         The width of the PyGame window.
     height: int=600
         The height of the PyGame window.
+    win_screen_time: float=5
+        Number of seconds to display the win screen.
 
     Returns
     -------
@@ -101,7 +103,8 @@ def main(white:str, black:str, timer:str="BronsteinDelayTimer",
     # Create the game object
     game = VisualGame(white_ai, black_ai, base_timer,
             width=width, height=height, board_dir=board_dir,
-            frame_dir=frame_dir, output_gif=output_gif)
+            frame_dir=frame_dir, output_gif=output_gif,
+            win_screen_time=win_screen_time)
 
     # Play the game
     result = game.play_game()
@@ -148,6 +151,8 @@ def parse_arguments(args=None) -> None:
             help="The width of the PyGame window.")
     parser.add_argument("--height", default=600, type=int,
             help="The height of the PyGame window.")
+    parser.add_argument("--win_screen_time", default=5, type=float,
+            help="Number of seconds to display the win screen.")
     args = parser.parse_args(args=args)
     return args
 

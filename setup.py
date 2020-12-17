@@ -4,7 +4,7 @@ import os
 from setuptools import setup, find_packages
 
 setup(
-    version="0.17.0",
+    version="0.18.0",
     setup_requires=[],
     test_require=[],
     include_package_data=True,

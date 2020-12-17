@@ -6,6 +6,7 @@ import PIL
 import pygame
 import os
 import tempfile
+import time
 
 from ..ai.base import BaseAI
 from ..timer.base import BaseTimer
@@ -16,7 +17,7 @@ class VisualGame(BaseGame):
     def __init__(self, white_ai:BaseAI, black_ai:BaseAI, 
             base_timer:BaseTimer, width:int=400, height:int=600, 
             board_dir:str=None, frame_dir:str=None,
-            output_gif:str=None) -> None:
+            output_gif:str=None, win_screen_time:float=5) -> None:
         """Play the game with a visual output, using PyGame.
 
         Parameters
@@ -45,6 +46,8 @@ class VisualGame(BaseGame):
         output_gif: str = None
             If specified the PNG of each frame that PyGame displays is
             turned into a GIF and stored at the specified location.
+        win_screen_time: float = 5
+            The number of seconds to display win information.
         """
         # Setup the super class portion
         super().__init__(white_ai, black_ai, base_timer)
@@ -89,6 +92,7 @@ class VisualGame(BaseGame):
         self._screen = pygame.display.set_mode((self._width, self._height))
         self._font = pygame.font.SysFont(None, int(self._height*(1/8)))
         self._frame = 0
+        self._win_screen_time = win_screen_time
 
         # Calculate inner widths and heights
         self._board_width = self._width
@@ -111,6 +115,12 @@ class VisualGame(BaseGame):
         if self._result is None:
             # Play the game
             super().play_game()
+
+            # Display the win screen for a bit
+            start_time = time.perf_counter()
+            while time.perf_counter() - start_time \
+                    < self._win_screen_time:
+                self._display()
 
             # Save all the frames into a gif (if applicable)
             if self._output_gif is not None:
@@ -139,7 +149,8 @@ class VisualGame(BaseGame):
         # Black out the screen
         self._screen.fill((0,0,0))
         # Draw the board
-        self._screen.blit(self._prep_board_sprite(), (0,self._info_height))
+        self._screen.blit(self._prep_board_sprite(), 
+                (0,self._info_height))
         # Draw ai info
         self._draw_ai_info(chess.WHITE)
         self._draw_ai_info(chess.BLACK)
@@ -196,23 +207,39 @@ class VisualGame(BaseGame):
         """
         # Collect relevant info
         if color == chess.WHITE:
-            name = self.white_ai.__class__.__name__
-            time = self.white_timer.display_time()
             start_height = self._height - self._info_height
+            name = self.white_ai.__class__.__name__
+            # Display the time
+            info = self.white_timer.display_time()
+            # Display win status if available.
+            if self._result is not None:
+                # Display win status
+                if self._result.color == chess.WHITE:
+                    info = f"{info} -- Win"
+                else:
+                    info = f"{info} -- Loss"
         else:
-            name = self.black_ai.__class__.__name__
-            time = self.black_timer.display_time()
             start_height = 0
+            name = self.black_ai.__class__.__name__
+            # Display the time
+            info = self.black_timer.display_time()
+            # Display win status if available.
+            if self._result is not None:
+                # Display win status
+                if self._result.color == chess.BLACK:
+                    info = f"{info} -- Win"
+                else:
+                    info = f"{info} -- Loss"
 
         # Render images
         name_img = self._font.render(name, True, (255,255,255))
-        time_img = self._font.render(time, True, (255,255,255))
+        info_img = self._font.render(info, True, (255,255,255))
 
         # Calculate image placements
         name_placment = (self._info_width*0.001, start_height)
-        time_placment = (self._info_width*0.001,
+        info_placment = (self._info_width*0.001,
                 start_height+(self._info_height/2.0))
         # Display images
         self._screen.blit(name_img, name_placment)
-        self._screen.blit(time_img, time_placment)
+        self._screen.blit(info_img, info_placment)
 

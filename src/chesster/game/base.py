@@ -284,6 +284,8 @@ class BaseGame(abc.ABC):
         # The game has ended, record the result, and return it.
         self._result = GameResult(self._board, self.white_timer,
                 self.black_timer)
+        # Display final result of game.
+        self._display()
         return self._result
 
 

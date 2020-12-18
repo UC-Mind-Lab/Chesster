@@ -6,31 +6,14 @@ import chess
 import os
 
 from ..ai.random import RandomAI
-from ..ai import AIs
-from ..timer import timers
-from ..game.visual import VisualGame
+from ..ai import AIs, NonExistentAI
+from ..timer import timers, NonExistentTimer
+from ..game import game_modes, NonExistentGame
 
 
-class NonExistentAI(Exception):
-    def __init__(self, ai:str):
-        self.ai = ai
-
-    def __str__(self):
-        return f"{self.ai} is not a valid AI name. Valid AIs are "\
-                f"{','.join(AIs.keys())}"
-
-
-class NonExistentTimer(Exception):
-    def __init__(self, timer:str):
-        self.timer = timer
-
-    def __str__(self):
-        return f"{self.timer} is not a valid timer name. Valid timers are "\
-                f"{','.join(timers.keys())}"
-
-
-def main(white:str, black:str, timer:str="BronsteinDelayTimer", 
-        start_seconds:int=600, increment_seconds:int=2, board_dir:str=None,
+def main(white:str, black:str, game_mode:str="VisualGame", 
+        timer:str="BronsteinDelayTimer", start_seconds:int=600,
+        increment_seconds:int=2, board_dir:str=None,
         frame_dir:str=None, output_gif:str=None, width:int=400,
         height:int=600, win_screen_time:float=5) -> int:
     """Main function.
@@ -43,6 +26,8 @@ def main(white:str, black:str, timer:str="BronsteinDelayTimer",
         The name of the AI for the black player.
     timer: str="BronsteinDelayTimer"
         The name of the timer for each player.
+    game_mode: str="VisualGame"
+        The name of the game mode to be played.
     start_seconds: float=600
         The number of seconds to start the timer at.
     increment_seconds: float=2
@@ -101,10 +86,16 @@ def main(white:str, black:str, timer:str="BronsteinDelayTimer",
         raise NonExistentTimer(timer)
 
     # Create the game object
-    game = VisualGame(white_ai, black_ai, base_timer,
-            width=width, height=height, board_dir=board_dir,
-            frame_dir=frame_dir, output_gif=output_gif,
-            win_screen_time=win_screen_time)
+    try:
+        if game_mode == "VisualGame":
+            game = game_modes[game_mode](white_ai, black_ai, base_timer,
+                    width=width, height=height, board_dir=board_dir,
+                    frame_dir=frame_dir, output_gif=output_gif,
+                    win_screen_time=win_screen_time)
+        else:
+            game = game_modes[game_mode](white_ai, black_ai, base_timer)
+    except KeyError:
+        raise NonExistentGame(game_mode)
 
     # Play the game
     result = game.play_game()
@@ -128,11 +119,16 @@ def parse_arguments(args=None) -> None:
     """
     parser = argparse.ArgumentParser(
             description="Chesster: Facilitate AIs to battle with chess. "\
-                    f"Available AIs:\n{', '.join(sorted(AIs.keys()))}. "\
-                    f"Available Timers:\n{', '.join(sorted(timers.keys()))}.",
+                    f"Available AIs: {', '.join(sorted(AIs.keys()))}. "\
+                    f"Available Timers: "\
+                    f"{', '.join(sorted(timers.keys()))}."\
+                    f"Available Game Modes: "\
+                    f"{', '.join(sorted(game_modes.keys()))}.",
             formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("white", help="The AI for the white player.")
     parser.add_argument("black", help="The AI for the white player.")
+    parser.add_argument("--game_mode", default="VisualGame",
+            help="The game mode to be used.")
     parser.add_argument("--timer", default="BronsteinDelayTimer",
             help="The timer to use for players.")
     parser.add_argument("--start_seconds", default=600, type=float,

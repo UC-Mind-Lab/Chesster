@@ -11,3 +11,11 @@ AIs = {
     RandomAI.__name__: RandomAI
 }
 
+class NonExistentAI(Exception):
+    def __init__(self, ai:str):
+        self.ai = ai
+
+    def __str__(self):
+        return f"{self.ai} is not a valid AI name. Valid AIs are "\
+                f"{','.join(AIs.keys())}"
+

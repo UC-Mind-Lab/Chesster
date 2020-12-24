@@ -16,6 +16,7 @@ class BaseTimer(abc.ABC):
         start_seconds: float
             The number of seconds the timer starts with.
         """
+        self._start_seconds = start_seconds
         self._seconds_left = start_seconds
         self._start_time = None
         self._time_clocked = 0
@@ -152,4 +153,45 @@ class BaseTimer(abc.ABC):
             return 0
         else:
             return time.perf_counter() - self._start_time
+
+
+    def to_dict(self) -> dict:
+        """Turn this class into a dictionary
+        Note it will not keep track of the currently started timer.
+
+        Returns
+        -------
+        dict
+            This classes objects, but in dictionary form.
+        """
+        return {
+                "class": self.__class__.__name__,
+                "start_seconds": self._start_seconds,
+                "increment_seconds": self._increment_seconds,
+                "seconds_left": self._seconds_left,
+                "time_clocked": self._time_clocked
+                }
+
+
+    @classmethod
+    def from_dict(cls, d:dict) -> 'BaseTimer':
+        """Create a BaseTimer from a dictionary of values.
+
+        Parameters
+        ----------
+        d: dict
+            The dictionary of values
+
+        Returns
+        -------
+        BaseTimer
+            The created BaseTimer
+        """
+        t = cls(
+                start_seconds = d['start_seconds'],
+                increment_seconds = d['increment_seconds']
+            )
+        t._seconds_left = d['seconds_left']
+        t._time_clocked = d['time_clocked']
+        return t
 

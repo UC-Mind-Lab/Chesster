@@ -37,9 +37,10 @@ class IncrementTimer(BaseTimer):
         TimerError
             Raised if the timer is already running.
         """
-        super().stop()
+        elapsed = super().stop()
         # Check that the clock hasn't expired
         if self.alive:
             # Increment since the move is complete and timer is alive.
             self._seconds_left += self._increment_seconds
+        return elapsed
 

@@ -36,4 +36,5 @@ class BronsteinDelayTimer(BaseTimer):
             else:
                 # Add only the number of seconds used
                 self._seconds_left += elapsed
+        return elapsed
 

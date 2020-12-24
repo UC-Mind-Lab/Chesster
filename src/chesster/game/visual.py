@@ -112,7 +112,7 @@ class VisualGame(BaseGame):
             The result of the game. It's also saved to self._result
         """
         # Has the game been played yet?
-        if self._result is None:
+        if self._record.result is None:
             # Play the game
             super().play_game()
 
@@ -139,7 +139,7 @@ class VisualGame(BaseGame):
                            duration=10,
                            loop=0)
         # Return the result
-        return self._result
+        return self._record.result
 
 
     def _display(self) -> None:
@@ -212,9 +212,9 @@ class VisualGame(BaseGame):
             # Display the time
             info = self.white_timer.display_time()
             # Display win status if available.
-            if self._result is not None:
+            if self._record.result is not None:
                 # Display win status
-                if self._result.color == chess.WHITE:
+                if self._record.result.color == chess.WHITE:
                     info = f"{info} -- Win"
                 else:
                     info = f"{info} -- Loss"
@@ -224,9 +224,9 @@ class VisualGame(BaseGame):
             # Display the time
             info = self.black_timer.display_time()
             # Display win status if available.
-            if self._result is not None:
+            if self._record.result is not None:
                 # Display win status
-                if self._result.color == chess.BLACK:
+                if self._record.result.color == chess.BLACK:
                     info = f"{info} -- Win"
                 else:
                     info = f"{info} -- Loss"

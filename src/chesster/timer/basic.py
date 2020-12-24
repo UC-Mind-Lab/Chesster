@@ -22,3 +22,17 @@ class BasicTimer(BaseTimer):
         """
         return self.seconds_to_string(self.time_clocked)
 
+
+    def to_dict(self) -> dict:
+        """Turn this class into a dictionary
+
+        Returns
+        -------
+        dict
+            This classes objects, but in dictionary form.
+        """
+        return {
+                "class": self.__class__.__name__,
+                "time_clocked": self._time_clocked
+                }
+

@@ -4,41 +4,10 @@ import chess
 import copy
 import multiprocessing as mp
 
+from .exceptions import IllegalMove
 from ..ai.base import BaseAI
-from ..records import GameResult
+from ..records import GameRecord, GameResult, Move
 from ..timer.base import BaseTimer
-
-
-class IllegalMove(Exception):
-    def __init__(self, board: chess.Board, move: chess.Move):
-        """An exception for illegal moves.
-
-        Parameters
-        ----------
-        board: chess.Board
-            The board the move was attempted on.
-        move: chess.Move
-            The move that was attempted.
-        """
-        self.board = board
-        self.move = move
-
-
-    @property
-    def offending_color(self) -> chess.Color:
-        """The color that made the illegal move"""
-        return self.board.color
-
-
-    @property
-    def offending_color_name(self) -> str:
-        """The name of the color that made the illegal move"""
-        return 'White' if self.offending_color == chess.WHITE else 'Black'
-
-
-    def __str__(self) -> str:
-        return f"{self.offending_color_name} attempted illegal move "\
-            f"{self.move.uci()} in board:\n{self.board.fen()}"
 
 
 class BaseGame(abc.ABC):
@@ -72,8 +41,11 @@ class BaseGame(abc.ABC):
         # Make the board
         self._board = chess.Board()
 
-        # Null out the result
-        self._result = None
+        # Make an empty Game record
+        self._record = GameRecord(self._board, 
+                self.white_ai.__class__.__name__,
+                self.black_ai.__class__.__name__
+                )
         
         # Multi-threading stuff
         self._queue = mp.Queue(maxsize=1)
@@ -90,6 +62,21 @@ class BaseGame(abc.ABC):
 
 
     @property
+    def record(self) -> GameRecord:
+        """The result of the game.
+        If the game has yet to be played, it will be played first.
+
+        Returns
+        -------
+        GameRecord
+            The record of the game.
+        """
+        if self._record.result is None:
+            self.play_game()
+        return self._record
+
+
+    @property
     def result(self) -> GameResult:
         """The result of the game.
         If the game has yet to be played, it will be played first.
@@ -99,9 +86,9 @@ class BaseGame(abc.ABC):
         GameResult
             The result of the game.
         """
-        if self._result is None:
+        if self._record.result is None:
             self.play_game()
-        return self._result
+        return self._record.result
 
 
     @property
@@ -127,9 +114,9 @@ class BaseGame(abc.ABC):
             The result of the game. It's also saved to self._result
         """
         # Have we already played?
-        if self._result is not None:
+        if self._record.result is not None:
             # Yes, so simply return the result
-            return self._result
+            return self._record.result
 
         # Display start of game
         self._display()
@@ -155,9 +142,9 @@ class BaseGame(abc.ABC):
                 elif self._queue.full():
                     # Stop the timer
                     if self._board.turn == chess.WHITE:
-                        self.white_timer.stop()
+                        time_used = self.white_timer.stop()
                     else:
-                        self.black_timer.stop()
+                        time_used = self.black_timer.stop()
 
                     # Remove the move from the queue
                     move = self._queue.get()
@@ -167,25 +154,37 @@ class BaseGame(abc.ABC):
 
                     # Check that the move is valid
                     if not self._board.is_legal(move):
+                        # Note that the recorded illegal move does not change
+                        # the board state.
+                        self._record.append(
+                                Move(move, self._board.turn,
+                                    time_used, self._board))
                         raise IllegalMove(self._board, move)
 
                     # Make the move
                     self._board.push(move)
+
+                    # Record the move
+                    # The turn color is "not"ed as the pushing of the move 
+                    # flips the turn to the other player.
+                    self._record.append(
+                            Move(move, not self._board.turn,
+                                time_used, self._board))
                    
                 # Regardless, display information
                 self._display()
         except IllegalMove as illegal_move:
             # If an AI makes an illegal move, their opponent wins
-            self._result = GameResult(self._board, self.white_timer,
-                    self.black_timer, illegal_move)
-            return self._result
+            self._record.result = GameResult(self._board, 
+                    self.white_timer, self.black_timer, illegal_move)
+            return self._record.result
 
         # The game has ended, record the result, and return it.
-        self._result = GameResult(self._board, self.white_timer,
+        self._record.result = GameResult(self._board, self.white_timer,
                 self.black_timer)
         # Display final result of game.
         self._display()
-        return self._result
+        return self._record.result
 
 
     @staticmethod

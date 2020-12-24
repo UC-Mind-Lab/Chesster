@@ -1,6 +1,8 @@
 """The game result calculator for  Chesster"""
 import chess
 
+from ..game.exceptions import IllegalMove
+from ..timer import timers
 from ..timer.base import BaseTimer
 
 
@@ -104,4 +106,47 @@ class GameResult:
             self._determine_winner()
         return self._reason
 
+
+    def to_dict(self) -> dict:
+        """Turn this class into a dictionary
+
+        Returns
+        -------
+        dict
+            This classes objects, but in dictionary form.
+        """
+        return {
+            "board": self.board.fen(),
+            "white_timer": self.white_timer.to_dict(),
+            "black_timer": self.black_timer.to_dict(),
+            "illegal_move": self.illegal_move.to_dict() \
+                    if self.illegal_move else self.illegal_move,
+            "color": self.color,
+            "reason": self.reason
+            }
+
+
+    @classmethod
+    def from_dict(cls, d:dict) -> 'GameResult':
+        """Create a GameResult from a dictionary of values.
+
+        Parameters
+        ----------
+        d: dict
+            The dictionary of values
+
+        Returns
+        -------
+        GameResult
+            The created GameResult
+        """
+        return cls(
+                board = chess.Board(fen=d['board']),
+                white_timer = timers[d['white_timer']['class']].\
+                        from_dict(d['white_timer']),
+                black_timer = timers[d['black_timer']['class']].\
+                        from_dict(d['black_timer']),
+                illegal_move = IllegalMove.from_dict(d['illegal_move'])\
+                        if d['illegal_move'] else d['illegal_move']
+                )
 

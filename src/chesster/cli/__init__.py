@@ -3,6 +3,7 @@
 
 import argparse
 import chess
+import json
 import os
 
 from ..ai.random import RandomAI
@@ -15,7 +16,8 @@ def main(white:str, black:str, game_mode:str="VisualGame",
         timer:str="BronsteinDelayTimer", start_seconds:int=600,
         increment_seconds:int=2, board_dir:str=None,
         frame_dir:str=None, output_gif:str=None, width:int=400,
-        height:int=600, win_screen_time:float=5) -> int:
+        height:int=600, win_screen_time:float=5,
+        record_file:str="record.json") -> int:
     """Main function.
 
     Parameters
@@ -103,7 +105,10 @@ def main(white:str, black:str, game_mode:str="VisualGame",
     # Display results
     color = "White" if result.color == chess.WHITE else "Black"
     print(f"{color} won because of {result.reason}")
-    
+
+    with open(record_file, "w") as fout:
+        json.dump(game.record.to_dict(), fout)
+
     # Return success code
     return 0
 
@@ -149,6 +154,8 @@ def parse_arguments(args=None) -> None:
             help="The height of the PyGame window.")
     parser.add_argument("--win_screen_time", default=5, type=float,
             help="Number of seconds to display the win screen.")
+    parser.add_argument("--record_file", default="record.json",
+            help="The name of the file to save a json of what happened.")
     args = parser.parse_args(args=args)
     return args
 

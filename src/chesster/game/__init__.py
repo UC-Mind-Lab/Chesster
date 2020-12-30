@@ -15,5 +15,5 @@ class NonExistentGame(Exception):
 
     def __str__(self):
         return f"{self.game} is not a valid Game name. Valid Games are "\
-                f"{','.join(games.keys())}"
+                f"{','.join(game_modes.keys())}"
 

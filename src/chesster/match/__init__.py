@@ -1,8 +1,10 @@
 """Match module for Chesster"""
 
+from .headless import HeadlessMatch
 from .visual import VisualMatch
 
 match_modes = {
+    "headless": HeadlessMatch,
     "visual": VisualMatch
 }
 

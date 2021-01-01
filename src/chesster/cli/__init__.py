@@ -101,7 +101,7 @@ def main(white:str, black:str, display_mode:str="visual",
                     win_screen_time=win_screen_time)
         else:
             match = match_modes[display_mode](white_ai, black_ai, 
-                    base_timer)
+                    base_timer, wins_required)
     except KeyError:
         raise NonExistentMatch(display_mode)
 

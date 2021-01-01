@@ -83,7 +83,7 @@ class MatchRecord:
         if self.wins_required == 1:
             return 1
         else:
-            return self.wins_required + 1
+            return self.wins_required*2 + 1
 
 
     def to_dict(self) -> dict:

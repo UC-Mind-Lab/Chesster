@@ -23,6 +23,18 @@ class BaseTimer(abc.ABC):
         self._increment_seconds = increment_seconds
 
 
+    def reset(self) -> None:
+        """Resets all recorded values"""
+        try:
+            self.stop()
+        except TimerError:
+            # This error will occur if the timer wasn't
+            # running.
+            pass
+        self._seconds_left = self._start_seconds
+        self._time_clocked = 0
+
+
     @property
     def alive(self) -> bool:
         """Return rather there is still time on the timer.

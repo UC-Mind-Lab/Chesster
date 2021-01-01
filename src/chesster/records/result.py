@@ -30,6 +30,7 @@ class GameResult:
 
         self._color = None
         self._reason = None
+        self._short_reason = None
 
 
     def _determine_winner(self) -> None:
@@ -39,42 +40,47 @@ class GameResult:
         # Was it a simple checkmate?
         if self.board.is_checkmate():
             self._color = not self.board.turn
-            self._reason = "checkmate"
+            self._short_reason = self._reason = "checkmate"
         else:
             if self.illegal_move is not None:
                 self._color = not self.illegal_move.offending_color
-                self._reason = "illegal move"
+                self._short_reason = self._reason = "illegal move"
             else:
                 # Check for time outs
                 if not self.black_timer.alive:
                     self._color = chess.WHITE
-                    self._reason = "time out"
+                    self._short_reason = self._reason = "time out"
                 elif not self.white_timer.alive:
                     self._color = chess.BLACK
-                    self._reason = "time out"
+                    self._short_reason = self._reason = "time out"
                 # Compare time left on timer
                 elif self.white_timer.seconds_left \
                         > self.black_timer.seconds_left:
                     self._color = chess.WHITE
                     self._reason = "more time on timer"
+                    self._short_reason = "timer"
                 elif self.black_timer.seconds_left \
                         > self.white_timer.seconds_left:
                     self._color = chess.BLACK
                     self._reason = "more time on timer"
+                    self._short_reason = "timer"
 
                 # Compare total time spent
                 elif self.white_timer.time_clocked \
                         < self.black_timer.time_clocked:
                     self._color = chess.WHITE
                     self._reason = "less time computing"
+                    self._short_reason = "compute time"
                 elif self.black_timer.time_clocked \
                         < self.white_timer.time_clocked:
                     self._color = chess.BLACK
                     self._reason = "less time computing"
+                    self._short_reason = "compute time"
                 else:
                     # Complete tie, nothing can be done
                     self._color = None
                     self._reason = "total tie"
+                    self._short_reason = "total tie"
 
 
     @property
@@ -107,6 +113,21 @@ class GameResult:
         return self._reason
 
 
+    @property
+    def short_reason(self) -> str:
+        """The logic behind the winner
+        Will calculate it if not already calculated
+
+        Returns
+        -------
+        str 
+            The short explanation for why the color won.
+        """
+        if self._short_reason is None:
+            self._determine_winner()
+        return self._short_reason
+
+
     def to_dict(self) -> dict:
         """Turn this class into a dictionary
 
@@ -122,7 +143,8 @@ class GameResult:
             "illegal_move": self.illegal_move.to_dict() \
                     if self.illegal_move else self.illegal_move,
             "color": self.color,
-            "reason": self.reason
+            "reason": self.reason,
+            "short_reason": self.short_reason
             }
 
 

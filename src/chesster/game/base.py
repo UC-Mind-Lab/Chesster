@@ -6,7 +6,7 @@ import multiprocessing as mp
 
 from .exceptions import IllegalMove
 from ..ai.base import BaseAI
-from ..records import GameRecord, GameResult, Move
+from ..records.game import GameRecord, GameResult, Move
 from ..timer.base import BaseTimer
 
 

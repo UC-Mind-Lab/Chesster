@@ -9,15 +9,15 @@ import os
 from ..ai.random import RandomAI
 from ..ai import AIs, NonExistentAI
 from ..timer import timers, NonExistentTimer
-from ..game import game_modes, NonExistentGame
+from ..match import match_modes, NonExistentMatch
 
 
-def main(white:str, black:str, game_mode:str="VisualGame", 
+def main(white:str, black:str, display_mode:str="visual", 
         timer:str="BronsteinDelayTimer", start_seconds:int=600,
-        increment_seconds:int=2, board_dir:str=None,
-        frame_dir:str=None, output_gif:str=None, width:int=400,
+        increment_seconds:int=2, board_dir:str=None, frame_dir:str=None, 
+        output_gif:str=None, width:int=800,
         height:int=600, win_screen_time:float=5,
-        record_file:str="record.json") -> int:
+        wins_required:int=1, record_file:str="record.json") -> int:
     """Main function.
 
     Parameters
@@ -28,8 +28,8 @@ def main(white:str, black:str, game_mode:str="VisualGame",
         The name of the AI for the black player.
     timer: str="BronsteinDelayTimer"
         The name of the timer for each player.
-    game_mode: str="VisualGame"
-        The name of the game mode to be played.
+    display_mode: str="visual"
+        The type of display for the match.
     start_seconds: float=600
         The number of seconds to start the timer at.
     increment_seconds: float=2
@@ -48,6 +48,10 @@ def main(white:str, black:str, game_mode:str="VisualGame",
         The height of the PyGame window.
     win_screen_time: float=5
         Number of seconds to display the win screen.
+    wins_required: int=1
+        Number of wins required to win the match.
+    record_file: str="record.json"
+        File to save a record of the match to.
 
     Returns
     -------
@@ -89,25 +93,26 @@ def main(white:str, black:str, game_mode:str="VisualGame",
 
     # Create the game object
     try:
-        if game_mode == "VisualGame":
-            game = game_modes[game_mode](white_ai, black_ai, base_timer,
-                    width=width, height=height, board_dir=board_dir,
-                    frame_dir=frame_dir, output_gif=output_gif,
+        if display_mode == "visual":
+            match = match_modes[display_mode](
+                    white_ai, black_ai, base_timer, wins_required,
+                    width=width, height=height, boards_dir=board_dir,
+                    frames_dir=frame_dir, output_gif=output_gif,
                     win_screen_time=win_screen_time)
         else:
-            game = game_modes[game_mode](white_ai, black_ai, base_timer)
+            match = match_modes[display_mode](white_ai, black_ai, 
+                    base_timer)
     except KeyError:
-        raise NonExistentGame(game_mode)
+        raise NonExistentMatch(display_mode)
 
     # Play the game
-    result = game.play_game()
+    winner = match.play_match()
 
     # Display results
-    color = "White" if result.color == chess.WHITE else "Black"
-    print(f"{color} won because of {result.reason}")
+    color = "White" if winner == chess.WHITE else "Black"
 
     with open(record_file, "w") as fout:
-        json.dump(game.record.to_dict(), fout)
+        json.dump(match.record.to_dict(), fout)
 
     # Return success code
     return 0
@@ -128,11 +133,11 @@ def parse_arguments(args=None) -> None:
                     f"Available Timers: "\
                     f"{', '.join(sorted(timers.keys()))}."\
                     f"Available Game Modes: "\
-                    f"{', '.join(sorted(game_modes.keys()))}.",
+                    f"{', '.join(sorted(match_modes.keys()))}.",
             formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("white", help="The AI for the white player.")
     parser.add_argument("black", help="The AI for the white player.")
-    parser.add_argument("--game_mode", default="VisualGame",
+    parser.add_argument("--display_mode", default="visual",
             help="The game mode to be used.")
     parser.add_argument("--timer", default="BronsteinDelayTimer",
             help="The timer to use for players.")
@@ -148,12 +153,14 @@ def parse_arguments(args=None) -> None:
             "it will be a temporary system folder.")
     parser.add_argument("--output_gif", default=None,
             help="The name of the gif to save the whole game to.")
-    parser.add_argument("--width", default=400, type=int,
+    parser.add_argument("--width", default=800, type=int,
             help="The width of the PyGame window.")
     parser.add_argument("--height", default=600, type=int,
             help="The height of the PyGame window.")
     parser.add_argument("--win_screen_time", default=5, type=float,
             help="Number of seconds to display the win screen.")
+    parser.add_argument("--wins_required", default=1, type=int,
+            help="Number of wins required to win the match.")
     parser.add_argument("--record_file", default="record.json",
             help="The name of the file to save a json of what happened.")
     args = parser.parse_args(args=args)
@@ -172,9 +179,9 @@ def cli_interface() -> None:
     except NonExistentTimer as exp:
         print(exp, file=sys.stderr)
         exit(2)
-    except FileExistsError as exp:
-        print(f"Directory \"{exp}\" already exists.", file=sys.stderr)
-        exit(3)
+    # except FileExistsError as exp:
+        # print(f"Directory \"{exp}\" already exists.", file=sys.stderr)
+        # exit(3)
     except PermissionError as exp:
         print(exp, file=sys.stderr)
         exit(4)

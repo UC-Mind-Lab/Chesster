@@ -10,14 +10,17 @@ import time
 
 from ..ai.base import BaseAI
 from ..timer.base import BaseTimer
-from .base import BaseGame, GameResult
+from ..records.game import GameRecord
+from ..records.result import GameResult
+from .base import BaseGame
 
 
 class VisualGame(BaseGame):
     def __init__(self, white_ai:BaseAI, black_ai:BaseAI, 
             base_timer:BaseTimer, width:int=400, height:int=600, 
-            board_dir:str=None, frame_dir:str=None,
-            output_gif:str=None, win_screen_time:float=5) -> None:
+            screen:pygame.Surface=None, board_dir:str=None,
+            frame_dir:str=None, output_gif:str=None, 
+            win_screen_time:float=5) -> None:
         """Play the game with a visual output, using PyGame.
 
         Parameters
@@ -33,6 +36,11 @@ class VisualGame(BaseGame):
             The width of the window for PyGame.
         height: int = 600
             The height of the window for PyGame.
+        screen: pygame.Surface
+            The screen space to draw on, if not specified this object
+            will create it's own. If given a screen it will assume that
+            pygame has already been initialized. Note that this screen
+            will override any values given for width and height.
         board_dir: str = None
             If specified it's the directory to save the PNG of each
             board state. Else they're stored in a temporary directory
@@ -86,19 +94,23 @@ class VisualGame(BaseGame):
                 raise FileExistsError(self._output_gif)
 
         # Initialize PyGame
-        self._width = width
-        self._height = height
-        pygame.init()
-        self._screen = pygame.display.set_mode((self._width, self._height))
-        self._font = pygame.font.SysFont(None, int(self._height*(1/8)))
+        if screen is None:
+            # If no surface is defined we must initialize everything.
+            pygame.init()
+            self._screen = pygame.display.set_mode(
+                    (width, height))
+        else:
+            self._screen = screen
+        self._font = pygame.font.SysFont(None, 
+                int(self._screen.get_height()/8))
         self._frame = 0
         self._win_screen_time = win_screen_time
 
         # Calculate inner widths and heights
-        self._board_width = self._width
-        self._board_height = (2.0/3.0) * self._height
-        self._info_width = self._width
-        self._info_height = (1.0/6.0) * self._height
+        self._board_width = self._screen.get_width()
+        self._board_height = (2.0/3.0) * self._screen.get_height()
+        self._info_width = self._screen.get_width()
+        self._info_height = (1.0/6.0) * self._screen.get_height()
 
 
     def play_game(self) -> GameResult:
@@ -138,8 +150,25 @@ class VisualGame(BaseGame):
                            append_images=it,
                            duration=10,
                            loop=0)
+
         # Return the result
         return self._record.result
+
+
+    def _display_text(self, text:int, placement:tuple) -> None:
+        """Render and display text.
+        
+        Parameters
+        ----------
+        text: str
+            The text to render and display text
+        placement: (int, int)
+            The placement of the text on the screen.
+        """
+        # Render the text
+        img = self._font.render(text, True, (255, 255, 255))
+        # Display the text
+        self._screen.blit(img, placement)
 
 
     def _display(self) -> None:
@@ -158,9 +187,8 @@ class VisualGame(BaseGame):
         pygame.display.update()
         # Save frame
         if self._frame_dir is not None:
-            pygame.image.save(self._screen, os.path.join(
-                self._frame_dir, 
-                f"{self._frame:08}.png"))
+            pygame.image.save(pygame.display.get_surface(), 
+                    os.path.join(self._frame_dir, f"{self._frame:08}.png"))
             self._frame += 1
 
 
@@ -207,7 +235,8 @@ class VisualGame(BaseGame):
         """
         # Collect relevant info
         if color == chess.WHITE:
-            start_height = self._height - self._info_height
+            start_height = self._screen.get_height()\
+                    - self._info_height
             name = self.white_ai.__class__.__name__
             # Display the time
             info = self.white_timer.display_time()
@@ -231,15 +260,9 @@ class VisualGame(BaseGame):
                 else:
                     info = f"{info} -- Loss"
 
-        # Render images
-        name_img = self._font.render(name, True, (255,255,255))
-        info_img = self._font.render(info, True, (255,255,255))
-
-        # Calculate image placements
-        name_placment = (self._info_width*0.001, start_height)
-        info_placment = (self._info_width*0.001,
-                start_height+(self._info_height/2.0))
-        # Display images
-        self._screen.blit(name_img, name_placment)
-        self._screen.blit(info_img, info_placment)
+        self._display_text(name, 
+                (self._info_width*0.001, start_height))
+        self._display_text(info,
+                (self._info_width*0.001, start_height+\
+                    (self._info_height/2.0)))
 

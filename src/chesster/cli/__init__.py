@@ -17,7 +17,7 @@ def main(white:str, black:str, display_mode:str="visual",
         increment_seconds:int=2, board_dir:str=None, frame_dir:str=None, 
         output_gif:str=None, width:int=800,
         height:int=600, win_screen_time:float=5,
-        wins_required:int=1, record_file:str="record.json") -> int:
+        wins_required:int=1, record_file:str=None) -> int:
     """Main function.
 
     Parameters
@@ -50,7 +50,7 @@ def main(white:str, black:str, display_mode:str="visual",
         Number of seconds to display the win screen.
     wins_required: int=1
         Number of wins required to win the match.
-    record_file: str="record.json"
+    record_file: str=None
         File to save a record of the match to.
 
     Returns
@@ -111,8 +111,9 @@ def main(white:str, black:str, display_mode:str="visual",
     # Display results
     color = "White" if winner == chess.WHITE else "Black"
 
-    with open(record_file, "w") as fout:
-        json.dump(match.record.to_dict(), fout)
+    if record_file is not None:
+        with open(record_file, "w") as fout:
+            json.dump(match.record.to_dict(), fout)
 
     # Return success code
     return 0
@@ -161,7 +162,7 @@ def parse_arguments(args=None) -> None:
             help="Number of seconds to display the win screen.")
     parser.add_argument("--wins_required", default=1, type=int,
             help="Number of wins required to win the match.")
-    parser.add_argument("--record_file", default="record.json",
+    parser.add_argument("--record_file", default=None,
             help="The name of the file to save a json of what happened.")
     args = parser.parse_args(args=args)
     return args

@@ -33,6 +33,8 @@ class BasicTimer(BaseTimer):
         """
         return {
                 "class": self.__class__.__name__,
-                "time_clocked": self._time_clocked
+                "time_clocked": self._time_clocked,
+                "elapsed_times": self._elapsed_times,
+                "average_elapsed_time": self.average_elapsed_time
                 }
 

@@ -21,6 +21,7 @@ class BaseTimer(abc.ABC):
         self._start_time = None
         self._time_clocked = 0
         self._increment_seconds = increment_seconds
+        self._elapsed_times = []
 
 
     def reset(self) -> None:
@@ -33,6 +34,7 @@ class BaseTimer(abc.ABC):
             pass
         self._seconds_left = self._start_seconds
         self._time_clocked = 0
+        self._elapsed_times = []
 
 
     @property
@@ -45,6 +47,21 @@ class BaseTimer(abc.ABC):
             Rather there is still time on the timer.
         """
         return self.seconds_left > 0
+
+    
+    @property
+    def average_elapsed_time(self) -> float:
+        """Return the average elapsed time
+
+        Returns
+        -------
+        float
+            The average elapsed time.
+        """
+        if len(self._elapsed_times) == 0:
+            return None
+        else:
+            return sum(self._elapsed_times)/len(self._elapsed_times)
 
 
     @property
@@ -149,6 +166,7 @@ class BaseTimer(abc.ABC):
         self._seconds_left -= elapsed
         self._time_clocked += elapsed
         self._start_time = None
+        self._elapsed_times.append(elapsed)
         # Return the number of seconds that elapsed
         return elapsed
 
@@ -181,7 +199,9 @@ class BaseTimer(abc.ABC):
                 "start_seconds": self._start_seconds,
                 "increment_seconds": self._increment_seconds,
                 "seconds_left": self._seconds_left,
-                "time_clocked": self._time_clocked
+                "time_clocked": self._time_clocked,
+                "elapsed_times": self._elapsed_times,
+                "average_elapsed_time": self.average_elapsed_time
                 }
 
 
@@ -201,9 +221,10 @@ class BaseTimer(abc.ABC):
         """
         t = cls(
                 start_seconds = d['start_seconds'],
-                increment_seconds = d['increment_seconds']
+                increment_seconds = d['increment_seconds'],
             )
         t._seconds_left = d['seconds_left']
         t._time_clocked = d['time_clocked']
+        t._elapsed_times = d['elapsed_times']
         return t
 

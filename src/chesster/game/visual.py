@@ -218,8 +218,16 @@ class VisualGame(BaseGame):
         """
         save_name=os.path.join(self._board_dir, 
                 f"{len(self._board.move_stack):06}.png")
+
+        if len(self._board.move_stack) == 0:
+            lastmove = None
+        else:
+            lastmove = self._board.move_stack[-1]
+
         cairosvg.svg2png(
-                bytestring=chess.svg.board(self._board),
+                bytestring=chess.svg.board(
+                    self._board,
+                    lastmove=lastmove),
                 write_to=save_name,
                 parent_width=self._board_width, 
                 parent_height=self._board_height)

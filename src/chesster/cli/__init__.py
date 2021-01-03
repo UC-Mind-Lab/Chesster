@@ -13,7 +13,7 @@ from ..match import match_modes, NonExistentMatch
 
 
 def main(white:str, black:str, display_mode:str="visual", 
-        timer:str="BronsteinDelayTimer", start_seconds:int=600,
+        timer:str="BasicTimer", start_seconds:int=600,
         increment_seconds:int=2, board_dir:str=None, frame_dir:str=None, 
         output_gif:str=None, width:int=800,
         height:int=600, win_screen_time:float=5,
@@ -26,7 +26,7 @@ def main(white:str, black:str, display_mode:str="visual",
         The name of the AI for the white player.
     black: str
         The name of the AI for the black player.
-    timer: str="BronsteinDelayTimer"
+    timer: str="BasicTimer"
         The name of the timer for each player.
     display_mode: str="visual"
         The type of display for the match.
@@ -140,7 +140,7 @@ def parse_arguments(args=None) -> None:
     parser.add_argument("black", help="The AI for the white player.")
     parser.add_argument("--display_mode", default="visual",
             help="The game mode to be used.")
-    parser.add_argument("--timer", default="BronsteinDelayTimer",
+    parser.add_argument("--timer", default="BasicTimer",
             help="The timer to use for players.")
     parser.add_argument("--start_seconds", default=600, type=float,
             help="The number of seconds to star the timer at.")

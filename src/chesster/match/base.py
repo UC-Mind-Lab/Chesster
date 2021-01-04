@@ -109,18 +109,16 @@ class BaseMatch(abc.ABC):
             # Yes, so simply return the result
             return self._record.winner
 
-        # Display start of match
-        self._display()
         # Play the match
         while self._record.winner is None:
+            # Display match information
+            self._display()
             # Create game
             game = self._create_game()
             # Start game
             game.play_game()
             # Save record of game
             self._record.append(game.record)
-            # Update information post game
-            self._display()
         # Display final result of match.
         self._display()
         return self._record.winner

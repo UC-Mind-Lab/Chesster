@@ -253,7 +253,9 @@ class VisualMatch(BaseMatch):
             frame_dir = None
 
         return VisualGame(self.white_ai, self.black_ai, 
-                self.base_timer, screen=self._board_subsurface, 
+                self.base_timer, 
+                initial_board_state=self._initial_board_state,
+                screen=self._board_subsurface, 
                 board_dir=board_dir, frame_dir=frame_dir,
                 win_screen_time=self._win_screen_time)
 

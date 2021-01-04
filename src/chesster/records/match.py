@@ -73,6 +73,23 @@ class MatchRecord:
         else:
             return None
 
+    @property
+    def winner_name(self) -> str:
+        """The name of the winning color.
+        Will calculate it if not already calculated
+
+        Returns
+        -------
+        str
+            The name of the winning color.
+        """
+        if self.winner is None:
+            return None
+        elif self.winner == chess.WHITE:
+            return "White"
+        else:
+            return "Black"
+
 
     @property
     def matches_played(self) -> int:

@@ -99,6 +99,25 @@ class GameResult:
 
 
     @property
+    def color_name(self) -> str:
+        """The name of the winning color.
+        Will calculate it if not already calculated
+
+        Returns
+        -------
+        str
+            The name of the winning color.
+        """
+        if self._color is None:
+            self._determine_winner()
+
+        if self._color == chess.WHITE:
+            return "White"
+        else:
+            return "Black"
+
+
+    @property
     def reason(self) -> str:
         """The logic behind the winner
         Will calculate it if not already calculated
@@ -143,6 +162,7 @@ class GameResult:
             "illegal_move": self.illegal_move.to_dict() \
                     if self.illegal_move else self.illegal_move,
             "color": self.color,
+            "color_name": self.color_name,
             "reason": self.reason,
             "short_reason": self.short_reason
             }

@@ -10,8 +10,23 @@ from ..timer.base import BaseTimer
 
 class BaseMatch(abc.ABC):
     def __init__(self, white_ai:BaseAI, black_ai:BaseAI, 
-            base_timer:BaseTimer, wins_required:int) -> None:
+            base_timer:BaseTimer, wins_required:int,
+            initial_board_state:str=None) -> None:
         """The base match object for Chesster.
+
+        Parameters
+        ----------
+        white_ai: BaseAI
+            The AI for the white player.
+        black_ai: BaseAI
+            The AI for the black player.
+        base_timer: BaseTimer
+            The timer that will be copied for both players. Note
+            that this object assumes that is a fresh timer object.
+        initial_board_state: str=None
+            The initial state of the board in FEN notation.
+            If not specified it will default to the standard
+            starting board state.
         """
         # Save the AI
         self.white_ai = white_ai
@@ -19,6 +34,9 @@ class BaseMatch(abc.ABC):
 
         # Save the base timer
         self.base_timer = base_timer
+
+        # Save the initial board state
+        self._initial_board_state = initial_board_state
 
         # Create empty match record
         self._record = MatchRecord(wins_required)

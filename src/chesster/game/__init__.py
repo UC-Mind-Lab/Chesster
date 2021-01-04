@@ -1,10 +1,12 @@
 """Game module for Chesster"""
 
 from .headless import HeadlessGame
+from .terminal import TerminalGame
 from .visual import VisualGame
 
 game_modes = {
     HeadlessGame.__name__: HeadlessGame,
+    TerminalGame.__name__: TerminalGame,
     VisualGame.__name__: VisualGame
 }
 

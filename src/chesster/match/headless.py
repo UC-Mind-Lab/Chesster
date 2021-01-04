@@ -34,5 +34,5 @@ class HeadlessMatch(BaseMatch):
             The newly created headless game.
         """
         return HeadlessGame(self.white_ai, self.black_ai,
-                self.base_timer)
+                self.base_timer, self._initial_board_state)
 

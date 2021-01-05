@@ -3,6 +3,7 @@ import abc
 import chess
 import copy
 import multiprocessing as mp
+import pygame
 
 from .exceptions import IllegalMove
 from ..ai.base import BaseAI
@@ -12,7 +13,8 @@ from ..timer.base import BaseTimer
 
 class BaseGame(abc.ABC):
     def __init__(self, white_ai:BaseAI, black_ai:BaseAI, 
-            base_timer:BaseTimer) -> None:
+            base_timer:BaseTimer, continually_redraw_display:bool,
+            initial_board_state:str=None) -> None:
         """The base game object for Chesster.
         Note that it uses multi-threading when running the AI's
         computation of the next move to take. The AI's shouldn't
@@ -29,6 +31,15 @@ class BaseGame(abc.ABC):
         base_timer: BaseTimer
             The timer that will be copied for both players. Note
             that this object assumes that is a fresh timer object.
+        initial_board_state: str=None
+            The initial state of the board in FEN notation.
+            If not specified it will default to the standard
+            starting board state.
+        continually_redraw_display: bool
+            Rather the state of the game should be continually redrawn
+            while waiting for an AI to make a move. This makes sense
+            for graphical outputs or smart terminal outputs like the
+            curses library. Not so much for simple print statements.
         """
         # Save the AI
         self.white_ai = white_ai
@@ -39,7 +50,13 @@ class BaseGame(abc.ABC):
         self.black_timer = copy.copy(base_timer)
 
         # Make the board
-        self._board = chess.Board()
+        if initial_board_state:
+            self._board = chess.Board(fen=initial_board_state)
+        else:
+            self._board = chess.Board()
+
+        # Save continually_redraw_display
+        self._continually_redraw_display = continually_redraw_display
 
         # Make an empty Game record
         self._record = GameRecord(self._board, 
@@ -118,10 +135,11 @@ class BaseGame(abc.ABC):
             # Yes, so simply return the result
             return self._record.result
 
-        # Display start of game
-        self._display()
+        # Play the game!
         try:
             while self._game_alive:
+                # Eat the event, we do nothing with it though.
+                pygame.event.get()
                 # Is there a process running to calculate a move?
                 if self._ai_thread is None:
                     # There is not, so we need to start one
@@ -138,6 +156,10 @@ class BaseGame(abc.ABC):
                                 args=(self._queue, self._board,
                                     self.black_ai, self.black_timer))
                     self._ai_thread.start()
+
+                    # Display updated board
+                    self._display()
+
                 # There is a process, is it complete?
                 elif self._queue.full():
                     # Stop the timer
@@ -170,9 +192,15 @@ class BaseGame(abc.ABC):
                     self._record.append(
                             Move(move, not self._board.turn,
                                 time_used, self._board))
+
+                    # Redraw updated board
+                    if self._continually_redraw_display:
+                        self._display()
+
+                # If nothing else, just redraw the display
+                elif self._continually_redraw_display:
+                    self._display()
                    
-                # Regardless, display information
-                self._display()
         except IllegalMove as illegal_move:
             # If an AI makes an illegal move, their opponent wins
             self._record.result = GameResult(self._board, 

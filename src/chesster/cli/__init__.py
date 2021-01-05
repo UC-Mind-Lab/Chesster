@@ -17,7 +17,8 @@ def main(white:str, black:str, display_mode:str="visual",
         increment_seconds:int=2, board_dir:str=None, frame_dir:str=None, 
         output_gif:str=None, width:int=800,
         height:int=600, win_screen_time:float=5,
-        wins_required:int=1, record_file:str=None) -> int:
+        wins_required:int=1, record_file:str=None,
+        initial_board_state:str=None) -> int:
     """Main function.
 
     Parameters
@@ -52,6 +53,10 @@ def main(white:str, black:str, display_mode:str="visual",
         Number of wins required to win the match.
     record_file: str=None
         File to save a record of the match to.
+    initial_board_state: str=None
+        The initial state of the board in FEN notation.
+        If not specified it will default to the standard
+        starting board state.
 
     Returns
     -------
@@ -98,10 +103,12 @@ def main(white:str, black:str, display_mode:str="visual",
                     white_ai, black_ai, base_timer, wins_required,
                     width=width, height=height, boards_dir=board_dir,
                     frames_dir=frame_dir, output_gif=output_gif,
-                    win_screen_time=win_screen_time)
+                    win_screen_time=win_screen_time,
+                    initial_board_state=initial_board_state)
         else:
             match = match_modes[display_mode](white_ai, black_ai, 
-                    base_timer, wins_required)
+                    base_timer, wins_required,
+                    initial_board_state=initial_board_state)
     except KeyError:
         raise NonExistentMatch(display_mode)
 
@@ -164,6 +171,10 @@ def parse_arguments(args=None) -> None:
             help="Number of wins required to win the match.")
     parser.add_argument("--record_file", default=None,
             help="The name of the file to save a json of what happened.")
+    parser.add_argument("--initial_board_state", default=None,
+            help="The initial state of the board in FEN notation. "\
+                "If not specified it will default to the standard "\
+                "starting board state.")
     args = parser.parse_args(args=args)
     return args
 

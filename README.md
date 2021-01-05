@@ -25,6 +25,7 @@ To try your hand at playing against the `RandomAI` try running:
 ```
 chesster RandomAI Human
 ```
+Note that you must enter your move in [UCI notation](https://simple.wikipedia.org/wiki/Chess_notation).
 
 To see all of the options that chesster has availabe to you run:
 ```
@@ -72,4 +73,6 @@ Note that [MatchRecord](src/chesster/records/match.py) keeps track of the number
 [GameRecord](src/chesster/records/game.py) objects.
 Each of the [GameRecord](src/chesster/records/game.py) objects knows what AI each color was, the initial board state, the eventual [GameResult](src/chesster/records/result.py) and a list of each [Move](src/chesster/records/move.py).
 From this information you should be able to teach your AI how to play chess, as well as debug what happens during a game.
+Something of use may be that you can specifiy the initial state of the board (in the [FEN](https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation) notation).
+This could be useful for debugging, or teaching your AI.
 

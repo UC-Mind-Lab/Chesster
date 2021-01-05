@@ -16,6 +16,7 @@ from .base import BaseMatch
 class VisualMatch(BaseMatch):
     def __init__(self, white_ai:BaseAI, black_ai:BaseAI, 
             base_timer:BaseTimer, wins_required:int,
+            initial_board_state:str=None,
             width:int=800, height:int=600, 
             board_subsurface:pygame.Surface=None, 
             match_info_subsurface:pygame.Surface=None, 
@@ -32,6 +33,10 @@ class VisualMatch(BaseMatch):
         base_timer: BaseTimer
             The timer that will be copied for both players. Note
             that this object assumes that is a fresh timer object.
+        initial_board_state: str=None
+            The initial state of the board in FEN notation.
+            If not specified it will default to the standard
+            starting board state.
         width: int = 800
             The width of the window for PyGame.
         height: int = 600
@@ -80,7 +85,8 @@ class VisualMatch(BaseMatch):
             entire match.
         """
         # Setup the super class portion
-        super().__init__(white_ai, black_ai, base_timer, wins_required)
+        super().__init__(white_ai, black_ai, base_timer, wins_required,
+                initial_board_state=initial_board_state)
 
         self._win_screen_time = win_screen_time
 
@@ -247,7 +253,9 @@ class VisualMatch(BaseMatch):
             frame_dir = None
 
         return VisualGame(self.white_ai, self.black_ai, 
-                self.base_timer, screen=self._board_subsurface, 
+                self.base_timer, 
+                initial_board_state=self._initial_board_state,
+                screen=self._board_subsurface, 
                 board_dir=board_dir, frame_dir=frame_dir,
                 win_screen_time=self._win_screen_time)
 

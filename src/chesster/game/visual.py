@@ -17,7 +17,8 @@ from .base import BaseGame
 
 class VisualGame(BaseGame):
     def __init__(self, white_ai:BaseAI, black_ai:BaseAI, 
-            base_timer:BaseTimer, width:int=400, height:int=600, 
+            base_timer:BaseTimer, initial_board_state:str=None,
+            width:int=400, height:int=600, 
             screen:pygame.Surface=None, board_dir:str=None,
             frame_dir:str=None, output_gif:str=None, 
             win_screen_time:float=5) -> None:
@@ -32,6 +33,10 @@ class VisualGame(BaseGame):
         base_timer: BaseTimer
             The timer that will be copied for both players. Note
             that this object assumes that is a fresh timer object.
+        initial_board_state: str=None
+            The initial state of the board in FEN notation.
+            If not specified it will default to the standard
+        starting board state.
         width: int = 400
             The width of the window for PyGame.
         height: int = 600
@@ -58,7 +63,9 @@ class VisualGame(BaseGame):
             The number of seconds to display win information.
         """
         # Setup the super class portion
-        super().__init__(white_ai, black_ai, base_timer)
+        super().__init__(white_ai, black_ai, base_timer,
+                continually_redraw_display=True,
+                initial_board_state=initial_board_state)
 
         # Save the output directory/file names
         self._board_dir = board_dir

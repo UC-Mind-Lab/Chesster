@@ -1,5 +1,6 @@
 """A record of a move within Chesster"""
 import chess
+import copy
 
 class Move:
     def __init__(self, move:chess.Move, color:chess.Color,
@@ -20,7 +21,22 @@ class Move:
         self.move = move
         self.color = color
         self.time_used = time_used
-        self.board = board
+        self.board = copy.deepcopy(board)
+
+
+    @property
+    def color_name(self) -> str:
+        """The name of the color that made the move.
+
+        Returns
+        -------
+        str
+            The name of the color that made the move.
+        """
+        if self.color == chess.WHITE:
+            return "White"
+        else:
+            return "Black"
 
 
     def to_dict(self) -> dict:
@@ -34,6 +50,7 @@ class Move:
         return {
             "move": self.move.uci() if self.move else self.move,
             "color": self.color,
+            "color_name": self.color_name,
             "time_used": self.time_used,
             "board": self.board.fen()
             }

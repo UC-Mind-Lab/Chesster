@@ -3,3 +3,4 @@ cairosvg >= 2.5.0
 numpy >= 1.19.4
 pygame >= 2.0.0
 pillow >= 8.0.1
+wheel >= 0.34.2

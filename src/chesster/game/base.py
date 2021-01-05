@@ -3,6 +3,7 @@ import abc
 import chess
 import copy
 import multiprocessing as mp
+import pygame
 
 from .exceptions import IllegalMove
 from ..ai.base import BaseAI

@@ -3,11 +3,11 @@ This provides a standard for a Chess AI hackathon and a graphical display of mat
 
 # Participation
 ## Installation
-To participate you must clone this repository through git, and create a branch (off of the development branch)
+To participate you must clone this repository through git, and create a branch (off of the development branch).
 
-If you are using Windows, you will need to download and install git as it is not installed by default. You may do so [here](https://git-scm.com/) or [here](https://gitforwindows.org/)
+If you are using Windows, you will need to download and install git as it is not installed by default. You may do so [here](https://git-scm.com/) or [here](https://gitforwindows.org/).
 
-Following installation of git, navigate to the directory where you want to clone the repository. In this directory, start a git bash terminal by right clicking and selecting the appropriate option. Alternatively start the git biash terminal and then navigate to the desired directory
+Following installation of git, navigate to the directory where you want to clone the repository. In this directory, start a git bash terminal by right clicking and selecting the appropriate option. Alternatively start the git biash terminal and then navigate to the desired directory.
 
 To clone the repository enter the following command:
 ```
@@ -28,14 +28,15 @@ git checkout -b YourName
 Before you start coding you should ensure that Chesster runs on your system via installing it and it's
 dependencies.
 ```
-pip install wheel
 pip install .
 ```
+
 After that you will have the `chesster` command available on your system.
 Try it out by running:
 ```
 chesster RandomAI RandomAI
 ```
+
 This will start a single game match between two instances of the RandomAI. 
 
 At this point it may be the case that you encounter an error in the terminal related to the cairo library, it may look something like the following:
@@ -45,11 +46,13 @@ cannot load library 'libcairo.so.2': error 0x7e
 cannot load library 'libcairo.2.dylib': error 0x7e
 cannot load library 'libcairo-2.dll': error 0xc1
 ```
+
 To solve this you will need to download the GTK+ libraries and adding that installation directory to the PATH environment variable. Reference [this guide](https://weasyprint.readthedocs.io/en/stable/install.html#step-4-install-the-gtk-libraries) on how to do that.
 If everything has gone correctly you can now try your hand at playing against the `RandomAI` try running:
 ```
 chesster RandomAI Human
 ```
+
 Note that you must enter your move in [UCI notation](https://simple.wikipedia.org/wiki/Chess_notation).
 
 To see all of the options that chesster has availabe to you run:

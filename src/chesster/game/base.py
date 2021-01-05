@@ -3,7 +3,6 @@ import abc
 import chess
 import copy
 import multiprocessing as mp
-import pygame
 
 from .exceptions import IllegalMove
 from ..ai.base import BaseAI
@@ -138,8 +137,6 @@ class BaseGame(abc.ABC):
         # Play the game!
         try:
             while self._game_alive:
-                # Eat the event, we do nothing with it though.
-                pygame.event.get()
                 # Is there a process running to calculate a move?
                 if self._ai_thread is None:
                     # There is not, so we need to start one

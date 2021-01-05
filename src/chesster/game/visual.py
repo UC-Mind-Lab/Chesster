@@ -182,6 +182,8 @@ class VisualGame(BaseGame):
         """Draw to the PyGame screen, saving the board and frames if
         asked to.
         """
+        # Eat the event, we do nothing with it though.
+        pygame.event.get()
         # Black out the screen
         self._screen.fill((0,0,0))
         # Draw the board

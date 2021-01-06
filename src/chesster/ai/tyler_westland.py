@@ -1,6 +1,7 @@
 """Tyler Westland's attempt at a chess AI"""
 import chess
 from collections import defaultdict
+import numpy as np
 import random
 random.seed()
 
@@ -10,10 +11,7 @@ from ..timer.base import BaseTimer
 
 class TylerWestlandAI(BaseAI):
     """This AI's plan:
-    Calculate the simple score of each move, and pick a random
-    best move. Often just a random move.
-    Currently takes all of RandomAI's pieces except the King, and
-    then loses due to taking longer to compute.
+    Do a minimax with a depth of 1.
 
     """
     @staticmethod
@@ -151,6 +149,40 @@ class TylerWestlandAI(BaseAI):
         return random.choice(scored_moves[max_score])
 
 
+    def minimax(self, board:chess.Board) -> chess.Move:
+        """Calculate minimax move
+
+        Parameters
+        ----------
+        board: chess.Board
+            The chessboard to analyze and make a move upon.
+
+        Returns
+        -------
+        chess.Move
+            Move to make.
+        """
+        best_move = (-np.inf, None)
+        for move in board.legal_moves:
+            # Get the score for the move
+            board.push(move)
+            score = self.simple_board_score(board)
+            # Get the scores for opponents moves
+            max_score = np.inf
+            for op_move in board.legal_moves:
+                board.push(op_move)
+                max_score = min(max_score,
+                        self.simple_board_score(board))
+                board.pop()
+            # Clean up for next loop of own move
+            board.pop()
+            best_move = max(
+                    (best_move, (max_score, move)),
+                    key=lambda tup: tup[0]
+                    )
+        return best_move[1]
+
+
     def make_move(self, board:chess.Board, timer:BaseTimer) -> chess.Move:
         """Return a really well thought out move.
 
@@ -170,5 +202,5 @@ class TylerWestlandAI(BaseAI):
         self.color = board.turn
 
         # Make the move
-        return self.best_simple_move(board)
+        return self.minimax(board)
 

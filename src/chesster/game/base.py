@@ -197,6 +197,10 @@ class BaseGame(abc.ABC):
                 # If nothing else, just redraw the display
                 elif self._continually_redraw_display:
                     self._display()
+                # We don't want to continually redraw the display, so let's wait
+                else:
+                    self._ai_thread.join()
+
                    
         except IllegalMove as illegal_move:
             # If an AI makes an illegal move, their opponent wins

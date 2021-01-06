@@ -7,7 +7,7 @@ import multiprocessing as mp
 from .exceptions import IllegalMove
 from ..ai.base import BaseAI
 from ..records.game import GameRecord, GameResult, Move
-from ..timer.base import BaseTimer
+from ..timer.base import BaseTimer, TimerError
 
 
 class BaseGame(abc.ABC):
@@ -203,17 +203,37 @@ class BaseGame(abc.ABC):
 
                    
         except IllegalMove as illegal_move:
+            # Stop the timers
+            self._stop_all_timers()
             # If an AI makes an illegal move, their opponent wins
             self._record.result = GameResult(self._board, 
                     self.white_timer, self.black_timer, illegal_move)
             return self._record.result
 
         # The game has ended, record the result, and return it.
+        # Stop the timers
+        self._stop_all_timers()
         self._record.result = GameResult(self._board, self.white_timer,
                 self.black_timer)
         # Display final result of game.
         self._display()
         return self._record.result
+
+
+    def _stop_all_timers(self) -> None:
+        """Stops all running timers.
+        This is used to make sure that the timers don't
+        run after someone loses due to an illegal move or
+        the clock running out.
+        """
+        try:
+            self.white_timer.stop()
+        except TimerError:
+            pass
+        try:
+            self.black_timer.stop()
+        except TimerError:
+            pass
 
 
     @staticmethod

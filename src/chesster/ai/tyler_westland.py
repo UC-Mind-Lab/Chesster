@@ -128,6 +128,29 @@ class TylerWestlandAI(BaseAI):
         return scored_moves
 
 
+    def best_simple_move(self, board:chess.Board) -> chess.Move:
+        """Return the best (random) move through simple analysis
+
+        Parameters
+        ----------
+        board: chess.Board
+            The chessboard to analyze and make a move upon.
+
+        Returns
+        -------
+        chess.Move
+            Move to make.
+        """
+        # Calculate the best possible moves based on a simple
+        # score of the boards.
+        scored_moves = self.simple_score_moves(board, 
+                board.legal_moves)
+        max_score = max(scored_moves.keys())
+
+        # Choose a random move with the highest possible score
+        return random.choice(scored_moves[max_score])
+
+
     def make_move(self, board:chess.Board, timer:BaseTimer) -> chess.Move:
         """Return a really well thought out move.
 
@@ -146,12 +169,6 @@ class TylerWestlandAI(BaseAI):
         # Save the color of ourself, so that we always know it.
         self.color = board.turn
 
-        # Calculate the best possible moves based on a simple
-        # score of the boards.
-        scored_moves = self.simple_score_moves(board, 
-                board.legal_moves)
-        max_score = max(scored_moves.keys())
-
-        # Choose a random move with the highest possible score
-        return random.choice(scored_moves[max_score])
+        # Make the move
+        return self.best_simple_move(board)
 

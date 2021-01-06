@@ -4,11 +4,13 @@ variants will use that API to compete in Chesster
 """
 from .human import Human
 from .random import RandomAI
+from .tyler_westland import TylerWestlandAI
 
 
 AIs = {
     Human.__name__: Human,
-    RandomAI.__name__: RandomAI
+    RandomAI.__name__: RandomAI,
+    TylerWestlandAI.__name__: TylerWestlandAI
 }
 
 class NonExistentAI(Exception):

@@ -4,11 +4,12 @@ variants will use that API to compete in Chesster
 """
 from .human import Human
 from .random import RandomAI
-
+from .ARCAI import ARCAI
 
 AIs = {
     Human.__name__: Human,
-    RandomAI.__name__: RandomAI
+    RandomAI.__name__: RandomAI,
+    ARCAI.__name__: ARCAI
 }
 
 class NonExistentAI(Exception):

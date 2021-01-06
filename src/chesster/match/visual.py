@@ -257,7 +257,7 @@ class VisualMatch(BaseMatch):
                 initial_board_state=self._initial_board_state,
                 screen=self._board_subsurface, 
                 board_dir=board_dir, frame_dir=frame_dir,
-                win_screen_time=self._win_screen_time)
+                win_screen_time=0)
 
 
     def play_match(self) -> chess.COLORS:

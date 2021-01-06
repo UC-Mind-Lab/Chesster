@@ -93,7 +93,7 @@ class BayleyAI(BaseAI):
         loc = scores.index(max(scores))
         return list(board.legal_moves)[loc]
         '''
-        score,move = self.alphaBetaMax(-99999,99999,3,list(board.legal_moves)[0],board)
+        score,move = self.alphaBetaMax(-99999,99999,2,list(board.legal_moves)[0],board)
         return move
 
 
@@ -161,8 +161,9 @@ class BayleyAI(BaseAI):
         #print('max: depth {}'.format(depth))
         if depth == 0:
             temp_score = self.eval_move_shannon(cur_move,board)
-            print('max score {}'.format(temp_score))
-            return temp_score, move
+            #print('max score {}'.format(temp_score))
+            return temp_score, cur_move
+        best_move = cur_move
         for move in board.legal_moves:
             board.push(move)
             s, temp_move = self.alphaBetaMin(alpha, beta, depth-1,move,board)
@@ -184,18 +185,20 @@ class BayleyAI(BaseAI):
         '''
         #print('min depth {}'.format(depth))
         if depth == 0:
-            temp_score = -1*self.eval_move_shannon(cur_move,board)
+            temp_score = self.eval_move_shannon(cur_move,board)
             #print('min score {}'.format(temp_score))
-            return temp_score, move
+            return temp_score, cur_move
+        best_move = cur_move
         for move in board.legal_moves:
             board.push(move)
             s,temp_move = self.alphaBetaMax(alpha, beta, depth-1,move,board)
             board.pop()
-            if s >= alpha:
+            if s <= alpha:
                 return alpha, move # alpha cutoff
-            if s > beta:
+            if s < beta:
                 beta = s # min in minimax
-        return beta, temp_move
+                best_move = move
+        return beta, best_move
 
    
     #def eval_pos(

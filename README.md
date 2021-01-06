@@ -7,7 +7,7 @@ To participate you must clone this repository through git, and create a branch (
 
 If you are using Windows, you will need to download and install git as it is not installed by default. You may do so [here](https://git-scm.com/) or [here](https://gitforwindows.org/).
 
-Following installation of git, navigate to the directory where you want to clone the repository. In this directory, start a git bash terminal by right clicking and selecting the appropriate option. Alternatively start the git biash terminal and then navigate to the desired directory.
+After installing git-bash you need to navigate to the directory in which you will clone the repository into. One way is to use the `cd` command, another is to right click the directory with Windows Explorer and select `open in git-bash`.
 
 To clone the repository enter the following command:
 ```

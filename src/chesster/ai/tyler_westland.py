@@ -168,18 +168,15 @@ class TylerWestlandAI(BaseAI):
         scores = list()
         for move in board.legal_moves:
             board.push(move)
+            score = self.simple_board_score(board)
             if depth <= 0:
-                scores.append(
-                        (move,
-                            self.simple_board_score(board)))
+                scores.append((move, score))
             else:
                 deeper_move, deeper_score = self.minimax(board, depth)
                 if deeper_score is not None:
                     scores.append((move, deeper_score))
                 else:
-                    scores.append(
-                            (move,
-                                self.simple_board_score(board)))
+                    scores.append((move, score))
             board.pop()
            
         if len(scores) == 0:
@@ -189,6 +186,39 @@ class TylerWestlandAI(BaseAI):
                 return max(scores, key=lambda s: s[1])
             else:
                 return min(scores, key=lambda s: s[1])
+
+
+    def alphabeta(self, score, board, depth, alpha, beta):
+        legal_moves = list(board.legal_moves)
+        if depth <= 0 or len(legal_moves) == 0:
+            return score
+
+        if board.turn == self.color:
+            v = -np.inf
+            for next_move in legal_moves:
+                board.push(next_move)
+                next_score = self.simple_board_score(board)
+                nn_s = self.alphabeta(
+                        next_score, board, depth - 1, alpha, beta)
+                board.pop()
+                v = max(v, nn_s)
+                alpha = max(alpha, v)
+                if alpha >= beta:
+                    break
+            return v
+        else:
+            v = np.inf
+            for next_move in legal_moves:
+                board.push(next_move)
+                next_score = self.simple_board_score(board)
+                nn_s = self.alphabeta(
+                        next_score, board, depth - 1, alpha, beta)
+                board.pop()
+                v = min(v, nn_s)
+                beta = min(beta, v)
+                if beta <= alpha:
+                    break
+            return v
 
 
     def make_move(self, board:chess.Board, timer:BaseTimer) -> chess.Move:
@@ -209,8 +239,27 @@ class TylerWestlandAI(BaseAI):
         # Save the color of ourself, so that we always know it.
         self.color = board.turn
 
-        m = self.minimax(board, depth=3)
+        best_move = -np.inf, None
+
+        # Determine the depth based on how well we're doing.
+        base_score = self.simple_board_score(board)
+        if base_score < -150:
+            depth = 2
+        elif base_score < 0:
+            depth = 1
+        if base_score == 0:
+            depth = 0
+        elif base_score < 300:
+            depth = 1
+        else:
+            depth = 2
+
+        for move in board.legal_moves:
+            board.push(move)
+            s = self.alphabeta(np.inf, board, depth, -np.inf, np.inf)
+            board.pop()
+            best_move = max(best_move, (s, move), key=lambda t:t[0])
 
         # Make the move
-        return m[0]
+        return best_move[1]
 

@@ -8,6 +8,7 @@ from .ARCAI import ARCAI
 from .bayley import BayleyAI
 from .jeffbot import Jeffbot
 from .joshai import SteinsGate
+from .sid import Sid
 from .tyler_westland import TylerWestlandAI
 from .wayne import Wayne
 
@@ -15,6 +16,7 @@ from .wayne import Wayne
 AIs = {
     Human.__name__: Human,
     RandomAI.__name__: RandomAI,
+    "Sid": Sid,
     ARCAI.__name__: ARCAI,
     BayleyAI.__name__: BayleyAI,
     Jeffbot.__name__: Jeffbot,

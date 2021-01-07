@@ -21,7 +21,9 @@ class VisualMatch(BaseMatch):
             board_subsurface:pygame.Surface=None, 
             match_info_subsurface:pygame.Surface=None, 
             boards_dir:str=None, frames_dir:str=None,
-            output_gif:str=None, win_screen_time:float=5) -> None:
+            output_gif:str=None, win_screen_time:float=5,
+            initial_pause_time:float=0
+            ) -> None:
         """Play a match of games with a visual output, using PyGame.
 
         Parameters
@@ -83,12 +85,17 @@ class VisualMatch(BaseMatch):
         win_screen_time: float = 5
             The number of seconds to display win information after the
             entire match.
+        initial_pause_time: float=0
+            Number of seconds to wait at the start of the match.
         """
         # Setup the super class portion
         super().__init__(white_ai, black_ai, base_timer, wins_required,
                 initial_board_state=initial_board_state)
 
         self._win_screen_time = win_screen_time
+        self._first_display = True
+        self._initial_pause_time = initial_pause_time
+        self._initial_board_state = initial_board_state
 
         # Initialize PyGame
         if board_subsurface is None and match_info_subsurface\
@@ -233,6 +240,14 @@ class VisualMatch(BaseMatch):
         # Push finished drawing of screen
         pygame.display.update()
 
+        # Display the empty screen for a bit
+        if self._first_display:
+            self._first_display = False
+            start_time = time.perf_counter()
+            while time.perf_counter() - start_time \
+                    < self._initial_pause_time:
+                self._display()
+
 
     def _create_game(self) -> VisualGame:
         """Create a VisualGame object.
@@ -257,7 +272,7 @@ class VisualMatch(BaseMatch):
                 initial_board_state=self._initial_board_state,
                 screen=self._board_subsurface, 
                 board_dir=board_dir, frame_dir=frame_dir,
-                win_screen_time=self._win_screen_time)
+                win_screen_time=0, initial_pause_time=0)
 
 
     def play_match(self) -> chess.COLORS:

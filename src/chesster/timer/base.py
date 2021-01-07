@@ -115,12 +115,17 @@ class BaseTimer(abc.ABC):
         str
             The converted seconds
         """
+        if seconds < 0:
+            sign = "-"
+            seconds = abs(seconds)
+        else:
+            sign = ""
         # Calculate the minutes and seconds
         minutes = int(seconds // 60)
         secs = int(seconds % 60)
         milliseconds = int(seconds % 60 % 1 * 100)
         # Return formatted text
-        return f"{minutes:02}:{secs:02}:{milliseconds:02}"
+        return f"{sign}{minutes:02}:{secs:02}:{milliseconds:02}"
 
 
     def display_time(self) -> str:

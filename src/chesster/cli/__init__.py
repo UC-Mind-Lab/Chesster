@@ -17,6 +17,7 @@ def main(white:str, black:str, display_mode:str="visual",
         increment_seconds:int=2, board_dir:str=None, frame_dir:str=None, 
         output_gif:str=None, width:int=800,
         height:int=600, win_screen_time:float=5,
+        initial_pause_time:float=0,
         wins_required:int=1, record_file:str=None,
         initial_board_state:str=None) -> int:
     """Main function.
@@ -49,6 +50,8 @@ def main(white:str, black:str, display_mode:str="visual",
         The height of the PyGame window.
     win_screen_time: float=5
         Number of seconds to display the win screen.
+    initial_pause_time: float=0
+        Number of seconds to wait at the start of the match.
     wins_required: int=1
         Number of wins required to win the match.
     record_file: str=None
@@ -104,6 +107,7 @@ def main(white:str, black:str, display_mode:str="visual",
                     width=width, height=height, boards_dir=board_dir,
                     frames_dir=frame_dir, output_gif=output_gif,
                     win_screen_time=win_screen_time,
+                    initial_pause_time=initial_pause_time,
                     initial_board_state=initial_board_state)
         else:
             match = match_modes[display_mode](white_ai, black_ai, 
@@ -167,6 +171,9 @@ def parse_arguments(args=None) -> None:
             help="The height of the PyGame window.")
     parser.add_argument("--win_screen_time", default=5, type=float,
             help="Number of seconds to display the win screen.")
+    parser.add_argument("--initial_pause_time", default=0, type=float,
+            help="Number of seconds to display the screen before starting "\
+                    "the match.")
     parser.add_argument("--wins_required", default=1, type=int,
             help="Number of wins required to win the match.")
     parser.add_argument("--record_file", default=None,

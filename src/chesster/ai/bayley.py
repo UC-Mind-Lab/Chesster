@@ -93,7 +93,7 @@ class BayleyAI(BaseAI):
         loc = scores.index(max(scores))
         return list(board.legal_moves)[loc]
         '''
-        score,move = self.alphaBetaMax(-99999,99999,2,list(board.legal_moves)[0],board)
+        score,move = self.alphaBetaMax(-99999,99999,3,list(board.legal_moves)[0],board)
         return move
 
 
@@ -139,12 +139,12 @@ class BayleyAI(BaseAI):
 
         temp_moves = len(list((board.legal_moves)))
         board.pop()
-        score = 200 * (len(board.pieces(chess.KING,board.turn) - len(board.pieces(chess.KING,not board.turn)))) + \
-                9   * (len(board.pieces(chess.QUEEN,board.turn) - len(board.pieces(chess.QUEEN,not board.turn)))) +  \
-                5   * (len(board.pieces(chess.ROOK,board.turn) - len(board.pieces(chess.ROOK,not board.turn)))) + \
-                3   * (len(board.pieces(chess.BISHOP,board.turn) - len(board.pieces(chess.BISHOP,not board.turn)))) + \
-                3   * (len(board.pieces(chess.KNIGHT,board.turn) - len(board.pieces(chess.KNIGHT,not board.turn)))) + \
-                1   * (len(board.pieces(chess.PAWN,board.turn) - len(board.pieces(chess.PAWN,not board.turn)))) + \
+        score = 200 * (len(board.pieces(chess.KING,board.turn)) - len(board.pieces(chess.KING,not board.turn))) + \
+                9   * (len(board.pieces(chess.QUEEN,board.turn)) - len(board.pieces(chess.QUEEN,not board.turn))) +  \
+                5   * (len(board.pieces(chess.ROOK,board.turn)) - len(board.pieces(chess.ROOK,not board.turn))) + \
+                3   * (len(board.pieces(chess.BISHOP,board.turn)) - len(board.pieces(chess.BISHOP,not board.turn))) + \
+                3   * (len(board.pieces(chess.KNIGHT,board.turn)) - len(board.pieces(chess.KNIGHT,not board.turn))) + \
+                1   * (len(board.pieces(chess.PAWN,board.turn)) - len(board.pieces(chess.PAWN,not board.turn))) + \
                 0.1 * (len(list(board.legal_moves)) - temp_moves)
         #print(score)
         board.push(move)

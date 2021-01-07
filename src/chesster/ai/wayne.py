@@ -1,4 +1,4 @@
-"""An AI that chooses a random legal move"""
+"""Wayne's chess AI - Minimax with alpha-beta pruning"""
 import chess
 import math
 import random
@@ -11,7 +11,7 @@ from ..timer.base import BaseTimer
 class Wayne(BaseAI):
     # Maximum number of half moves (should be an even number, probably)
     MAX_DEPTH = 3
-    # Values of the peices
+    # Values of the pieces
     PIECE_VALS = {
         chess.PAWN: 1,
         chess.KNIGHT: 3.05,
@@ -39,7 +39,6 @@ class Wayne(BaseAI):
         """
         self.color = board.turn
         mm = self.minimax(board, True, Wayne.MAX_DEPTH, -math.inf, math.inf)
-        print(f'Score: {mm[1]}')
         return mm[0]
         # return random.choice(list(board.legal_moves))
 

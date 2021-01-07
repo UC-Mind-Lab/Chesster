@@ -4,6 +4,7 @@ variants will use that API to compete in Chesster
 """
 from .human import Human
 from .random import RandomAI
+from .ARCAI import ARCAI
 from .jeffbot import Jeffbot
 from .joshai import SteinsGate
 from .tyler_westland import TylerWestlandAI
@@ -13,6 +14,7 @@ from .wayne import Wayne
 AIs = {
     Human.__name__: Human,
     RandomAI.__name__: RandomAI,
+    ARCAI.__name__: ARCAI,
     Jeffbot.__name__: Jeffbot,
     SteinsGate.__name__: SteinsGate,
     TylerWestlandAI.__name__: TylerWestlandAI,

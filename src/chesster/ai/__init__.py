@@ -7,6 +7,7 @@ from .random import RandomAI
 from .jeffbot import Jeffbot
 from .joshai import SteinsGate
 from .tyler_westland import TylerWestlandAI
+from .wayne import Wayne
 
 
 AIs = {
@@ -14,7 +15,8 @@ AIs = {
     RandomAI.__name__: RandomAI,
     Jeffbot.__name__: Jeffbot,
     SteinsGate.__name__: SteinsGate,
-    TylerWestlandAI.__name__: TylerWestlandAI
+    TylerWestlandAI.__name__: TylerWestlandAI,
+    Wayne.__name__: Wayne
 }
 
 class NonExistentAI(Exception):

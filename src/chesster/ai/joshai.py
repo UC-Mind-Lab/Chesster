@@ -5,13 +5,14 @@ random.seed()
 
 from .base import BaseAI
 from ..timer.base import BaseTimer
+import math
 
 
 class SteinsGate(BaseAI):
     """Chooses a random legal move"""
     def make_move(self, board: chess.Board, timer: BaseTimer) -> chess.Move:
         legal_moves = board.legal_moves
-        move_value = 0
+        move_value = -math.inf
         move_found = False
         best_move_list = []
         """Iterate through all the legal moves and evaluate them for viability"""
@@ -37,7 +38,6 @@ class SteinsGate(BaseAI):
         if board.gives_check(move):
             value += 1
         value += self.danger_calculation(board, not board.turn, move.from_square)
-
         value += self.move_test(board, move)
         return value
 
@@ -58,7 +58,6 @@ class SteinsGate(BaseAI):
 
     """Method for caluclating how much danger a piece is currently in or will be"""
     def danger_calculation(self, board, player_color, square) -> int:
-        # print("Calculating danger coefficient")
         offset = 0
         attacker_squares = board.attackers(color=player_color, square=square)
         for attacker in attacker_squares:
@@ -73,33 +72,44 @@ class SteinsGate(BaseAI):
     """Method for testing a move and determining if it is a move for checkmate or if by moving it will be in danger"""
     def move_test(self, board, move) -> int:
         offset = 0
+        current_promotions = board.promoted
         board.push(move)
         """If the move is a checkmate, guarantee that it will be selected"""
         if board.turn:
             if board.is_checkmate():
-                # print("Checkmate move found against WHITE!")
-                offset += 100
+                # Checkmate move found against WHITE
+                offset = math.inf
                 board.pop()
                 return offset
         else:
             if board.is_checkmate():
-                # print("Checkmate move found against BLACK!")
-                offset += 100
+                # Checkmate move found against BLACK
+                offset = math.inf
                 board.pop()
                 return offset
         """Check if the move will threaten other pieces"""
         attacking_squares = board.attacks(square=move.to_square)
-        for square in attacking_squares:
-            if board.piece_at(square) is not None:
-                if board.color_at(square) == board.turn:
+        for attacking in attacking_squares:
+            if board.piece_at(attacking) is not None:
+                if board.color_at(attacking) == board.turn:
                     """These are different ways of weighting the pieces that are being threatened by the potential move"""
-                    # offset += self.get_piece_offset(board, square)    # Weight by piece value
-                    # offset += (self.get_piece_offset(board, square) / 2)    # Weight by piece value / 2
-                    # offset += board.piece_type_at(square) # Weight by the piece game ID
-                    # offset += (board.piece_type_at(square) / 2)    # Weight by the piece game ID/2
-                    offset += 1 # Weight by the number of pieces threatened
+                    # offset += self.get_piece_offset(board, attacking)    # Weight by piece value
+                    offset += (self.get_piece_offset(board, attacking) / 2)    # Weight by piece value / 2
+                    # offset += board.piece_type_at(attacking) # Weight by the piece game ID
+                    # offset += (board.piece_type_at(attacking) / 2)    # Weight by the piece game ID/2
+                    # offset += 1     # Weight by the number of pieces threatened
                     # print("Piece threatening!", chess.square_name(move.to_square), "attacking:", chess.square_name(square), offset)
         """Check if the move will put the current piece in danger"""
         offset -= self.danger_calculation(board, board.turn, move.to_square)
+        """Check if the move will promote the current piece"""
+        if board.promoted > current_promotions:
+            offset += 3
+        """Check if the move is an en passant and prioritize it"""
+        if board.is_en_passant(move):
+            offset += 3
+        """Check if the move is a pawn and prioritize it"""
+        if board.is_zeroing(move):
+            if board.piece_type_at(move.to_square) == 1:
+                offset += 1
         board.pop()
         return offset

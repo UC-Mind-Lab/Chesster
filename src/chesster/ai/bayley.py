@@ -1,13 +1,12 @@
 """An AI that chooses a random legal move"""
 import chess
-import random
-random.seed()
+import numpy as np
 
 from .base import BaseAI
 from ..timer.base import BaseTimer
 
 '''
-king_pos = [
+king_pos = np.array([
     [-3.0,-4.0,-4.0,-5.0,-5.0,-4.0,-4.0,-3.0],
     [-3.0,-4.0,-4.0,-5.0,-5.0,-4.0,-4.0,-3.0],
     [-3.0,-4.0,-4.0,-5.0,-5.0,-4.0,-4.0,-3.0],
@@ -16,8 +15,8 @@ king_pos = [
     [-1,0,-2.0,-2.0,-2.0,-2.0,-2.0,-2.0,-1.0],
     [ 2.0, 2.0, 0.0, 0.0, 0.0, 0.0, 2.0, 2.0],
     [ 2.0, 3.0, 1.0, 0.0, 0.0, 1.0, 3.0, 2.0]
-]
-queen_pos = [
+])
+queen_pos = np.array([
     [-2.0,-1.0,-1.0,-0.5,-0.5,-1.0,-1.0,-2.0],
     [-1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,-1.0],
     [-1.0, 0.0, 0.5, 0.5, 0.5, 0.5, 0.0,-1.0],
@@ -26,8 +25,8 @@ queen_pos = [
     [-1,0, 0.5, 0.5, 0.5, 0.5, 0.5, 0.0,-1.0],
     [-1.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0,-1.0],
     [-2.0,-1.0,-1.0,-0.5,-0.5,-1.0,-1.0,-2.0]
-]
-rook_pos = [
+])
+rook_pos = np.array([
     [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
     [ 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.5],
     [-0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,-0.5],
@@ -36,8 +35,8 @@ rook_pos = [
     [-0,5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,-0.5],
     [-0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,-0.5],
     [ 0.0, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0]
-]
-bishop_pos = [
+])
+bishop_pos = np.array([
     [-2.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-2.0],
     [-1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,-1.0],
     [-1.0, 0.0, 0.5, 1.0, 1.0, 0.5, 0.0,-1.0],
@@ -46,8 +45,8 @@ bishop_pos = [
     [-1,0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,-1.0],
     [-1.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5,-1.0],
     [-2.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-2.0]
-]
-knight_pos = [
+])
+knight_pos = np.array([
     [-5.0,-4.0,-3.0,-3.0,-3.0,-3.0,-4.0,-5.0],
     [-4.0,-2.0, 0.0, 0.0, 0.0, 0.0,-2.0,-4.0],
     [-3.0, 0.0, 1.0, 1.5, 1.5, 1.0, 0.0,-3.0],
@@ -56,8 +55,8 @@ knight_pos = [
     [-3,0, 0.5, 1.0, 1.5, 1.5, 1.0, 0.5,-3.0],
     [-4.0,-2.0, 0.0, 0.5, 0.5, 0.0,-2.0,-4.0],
     [-5.0,-4.0,-3.0,-3.0,-3.0,-3.0,-4.0,-5.0]
-]
-pawn_pos = [
+])
+pawn_pos = np.array([
     [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
     [ 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0],
     [ 1.0, 1.0, 2.0, 3.0, 3.0, 2.0, 1.0, 1.0],
@@ -66,6 +65,14 @@ pawn_pos = [
     [ 0,5,-0.5,-1.0, 0.0, 0.0,-1.0,-0.5, 0.5],
     [ 0.5, 1.0, 1.0,-2.0,-2.0, 1.0, 1.0, 0.5],
     [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+])
+pieces_pos = [
+    [king_pos, chess.KING],
+    [queen_pos, chess.QUEEN],
+    [rook_pos, chess.ROOK],
+    [bishop_pos, chess.BISHOP],
+    [knight_pos, chess.KNIGHT],
+    [pawn_pos, chess.PAWN]
 ]
 '''
 
@@ -94,6 +101,7 @@ class BayleyAI(BaseAI):
         return list(board.legal_moves)[loc]
         '''
         score,move = self.alphaBetaMax(-99999,99999,3,list(board.legal_moves)[0],board)
+        #print(score)
         return move
 
 
@@ -108,34 +116,12 @@ class BayleyAI(BaseAI):
        + 5(R-R')
        + 3(B-B' + N-N')
        + 1(P-P')
-       - 0.5(D-D' + S-S' + I-I')
        + 0.1(M-M') + ...
 
         KQRBNP = number of kings, queens, rooks, bishops, knights and pawns
-        D,S,I = doubled, blocked and isolated pawns
         M = Mobility (the number of legal moves)
-
-        lower case letters = black pieces
-        upper case letters = white pieces
         """
-        '''
-        print('black')
-        print(len(board.pieces(chess.KING,board.turn)))
-        print(len(board.pieces(chess.QUEEN,0)))
-        print(len(board.pieces(chess.ROOK,0)))
-        print(len(board.pieces(chess.BISHOP,0)))
-        print(len(board.pieces(chess.KNIGHT,0)))
-        print(len(board.pieces(chess.PAWN,0)))
-        print(len(board.pieces(chess.KING,0)))
-        print('white')
-        print(len(board.pieces(chess.KING,not board.turn)))
-        print(len(board.pieces(chess.QUEEN,1)))
-        print(len(board.pieces(chess.ROOK,1)))
-        print(len(board.pieces(chess.BISHOP,1)))
-        print(len(board.pieces(chess.KNIGHT,1)))
-        print(len(board.pieces(chess.PAWN,1)))
-        print(len(board.pieces(chess.KING,1)))
-        '''
+
 
         temp_moves = len(list((board.legal_moves)))
         board.pop()
@@ -200,11 +186,4 @@ class BayleyAI(BaseAI):
                 best_move = move
         return beta, best_move
 
-   
-    #def eval_pos(
-    #    self, move, board
-    #):
-        """ Returns the score based off of a simple scoring algorithm 
-              and a simple position matrix
-
-        """
+    

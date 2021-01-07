@@ -21,7 +21,9 @@ class VisualGame(BaseGame):
             width:int=400, height:int=600, 
             screen:pygame.Surface=None, board_dir:str=None,
             frame_dir:str=None, output_gif:str=None, 
-            win_screen_time:float=5) -> None:
+            win_screen_time:float=5,
+            initial_pause_time:float=0
+            ) -> None:
         """Play the game with a visual output, using PyGame.
 
         Parameters
@@ -61,6 +63,8 @@ class VisualGame(BaseGame):
             turned into a GIF and stored at the specified location.
         win_screen_time: float = 5
             The number of seconds to display win information.
+        initial_pause_time: float=0
+            Number of seconds to wait at the start of the match.
         """
         # Setup the super class portion
         super().__init__(white_ai, black_ai, base_timer,
@@ -106,12 +110,19 @@ class VisualGame(BaseGame):
             pygame.init()
             self._screen = pygame.display.set_mode(
                     (width, height))
+            # Display the empty screen for a bit
+            start_time = time.perf_counter()
+            while time.perf_counter() - start_time \
+                    < initial_pause_time:
+                self._display()
         else:
             self._screen = screen
         self._font = pygame.font.SysFont(None, 
                 int(self._screen.get_height()/8))
         self._frame = 0
         self._win_screen_time = win_screen_time
+        self._first_display = True
+        self._initial_pause_time = initial_pause_time
 
         # Calculate inner widths and heights
         self._board_width = self._screen.get_width()
@@ -194,11 +205,20 @@ class VisualGame(BaseGame):
         self._draw_ai_info(chess.BLACK)
         # Push finished drawing of screen
         pygame.display.update()
+
         # Save frame
         if self._frame_dir is not None:
             pygame.image.save(pygame.display.get_surface(), 
                     os.path.join(self._frame_dir, f"{self._frame:08}.png"))
             self._frame += 1
+
+        # Display the empty screen for a bit
+        if self._first_display:
+            self._first_display = False
+            start_time = time.perf_counter()
+            while time.perf_counter() - start_time \
+                    < self._initial_pause_time:
+                self._display()
 
 
     def _prep_board_sprite(self) -> pygame.Surface:

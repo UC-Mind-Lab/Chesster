@@ -15,23 +15,23 @@ class ARCAI(BaseAI):
         self.BasePoints = 0
 
         # Add Points
-        self.CapturePoints = 1.5
-        self.ReadyToCapturePoints = 0.5
+        self.CapturePoints = 2
+        self.ReadyToCapturePoints = 1
         self.ForkPoints = 2
-        self.CheckmatePoints = 10
+        self.CheckmatePoints = 100
         self.CheckPoints = 1
-        self.PromotionPoints = 2
-        self.run_it_down_pts = 1
+        self.PromotionPoints = 3
+        self.run_it_down_pts = 2
         self.run_from_danger = 2
 
         # Lose Points
-        self.RepeatPoints = -2
-        self.SuicidePoints = -5
-        self.OpensCheckPoints = -2
-        self.OpensCheckmatePoints = -10
+        self.RepeatPoints = -1
+        self.SuicidePoints = -2
+        self.OpensCheckPoints = -1.5
+        self.OpensCheckmatePoints = -100
 
         # PiecePoints = [Pawn, Knight, Bishop, Rook, Queen, King?]
-        self.PiecePoints = {1: 1, 2: 2, 3: 3, 4: 4, 5: 6, 6: 10}
+        self.PiecePoints = {1: 1, 2: 2, 3: 3, 4: 4, 5: 10, 6: 2}
 
     """Choose a move"""
     def make_move(self, board:chess.Board, timer:BaseTimer) -> chess.Move:
@@ -72,7 +72,7 @@ class ARCAI(BaseAI):
             MovePoints.append(self.evalMoves(move, board, myPast, OppPast))
 
         try:
-            return list(board.legal_moves)[np.argmax(MovePoints)]
+            return list(x1)[np.argmax(MovePoints)]
         except IndexError:
             return random.choice(list(x1))
 
@@ -80,6 +80,7 @@ class ARCAI(BaseAI):
     def evalMoves(self, move, board, myPast, OppPast):
         my_pts = 0
         if move in board.legal_moves:
+
             # Add My Points
             mycolor = board.turn
             othercolor = not mycolor
@@ -87,12 +88,15 @@ class ARCAI(BaseAI):
             for i in board.piece_map().values():
                 if i.color == othercolor:
                     oppPieceNum += 1
+                '''
                 if (i.color == mycolor) & (i.piece_type == 5):
-                        if len(board.attackers(board.turn, move.to_square)) < \
-                                len(board.attackers(board.turn, move.from_square)):
-                            my_pts += 2.5
-                            if len(board.attackers(board.turn, move.to_square)) < 1:
-                                my_pts += 2.5
+                    print("once")
+                    if len(board.attackers(board.turn, move.to_square)) < \
+                            len(board.attackers(board.turn, move.from_square)):
+                        my_pts += 1
+                        if len(board.attackers(board.turn, move.to_square)) < 1:
+                            my_pts += 1
+                '''
 
             if oppPieceNum <= 3:
                 if chess.square_distance(move.to_square, board.king(othercolor)) < \
@@ -105,7 +109,6 @@ class ARCAI(BaseAI):
                 # Additional Bonus based on piece type
                 try:
                     my_pts += self.PiecePoints[board.piece_at(move.to_square).piece_type]
-                    # print("bonus of", self.PiecePoints[board.piece_at(move.to_square).piece_type])
                 except KeyError:
                     my_pts += 0
                 except AttributeError:
@@ -113,9 +116,6 @@ class ARCAI(BaseAI):
             if move in board.legal_moves:
                 if board.gives_check(move):
                     my_pts += self.CheckPoints
-                    if board.is_checkmate():
-                        my_pts += self.CheckmatePoints
-                        return my_pts
             if move.promotion:
                 my_pts += self.PromotionPoints
             if (move.from_square == myPast[1]) & (move.to_square == myPast[0]):
@@ -124,18 +124,18 @@ class ARCAI(BaseAI):
             if len(board.attackers(board.turn, move.to_square)) < len(board.attackers(board.turn, move.from_square)):
                 my_pts += self.run_from_danger
 
-
             # Make My Move
             nb1 = board
             nb1.push(move)
 
             if nb1.is_checkmate():
+                nb1.pop()
                 my_pts += self.CheckmatePoints
                 return my_pts
+
             # Subtract From My Points and Add Attack Bonuses
             # Add Attack Bonuses
             NumAttacks = 0
-
             for spot in list(nb1.attacks(move.to_square)):
                 if (nb1.color_at(spot) != nb1.turn) & (nb1.color_at(spot) is not None):
                     NumAttacks += 1
@@ -146,16 +146,16 @@ class ARCAI(BaseAI):
 
             # Subtract From My Points
             all_opp_pts = []
-            NotLostPoint = [True, True, True]
+            NLP0 = [True, True, True]
             for opp_move in nb1.legal_moves:
                 point_mod = 0
                 opp_pts = self.BasePoints
-                if (nb1.is_capture(opp_move)) & (NotLostPoint[0]):
+                if (nb1.is_capture(opp_move)) & (NLP0[0]):
                     point_mod += self.SuicidePoints
-                    NotLostPoint[0] = False
-                if (nb1.gives_check(opp_move)) & (NotLostPoint[1]):
+                    NLP0[0] = False
+                if (nb1.gives_check(opp_move)) & (NLP0[1]):
                     point_mod += self.OpensCheckPoints
-                    NotLostPoint[1] = False
+                    NLP0[1] = False
                 my_pts += point_mod
 
                 # Add Opponents Move Points
@@ -177,14 +177,15 @@ class ARCAI(BaseAI):
                     opp_pts += self.RepeatPoints
 
                 # Makes Opponents Moves
-                nb1.push(opp_move)
+                nb2 = nb1
+                nb2.push(opp_move)
 
                 # Subtract From Opponent Points and Add Attack Bonuses
                 # Add Attack Bonuses
                 NumAttacks = 0
 
-                for spot in list(nb1.attacks(opp_move.to_square)):
-                    if (nb1.color_at(spot) != nb1.turn) & (nb1.color_at(spot) is not None):
+                for spot in list(nb2.attacks(opp_move.to_square)):
+                    if (nb2.color_at(spot) != nb2.turn) & (nb2.color_at(spot) is not None):
                         NumAttacks += 1
                 if NumAttacks >= 2:
                     opp_pts += self.ForkPoints
@@ -192,83 +193,125 @@ class ARCAI(BaseAI):
                     opp_pts += self.ReadyToCapturePoints
 
                 # Subtract From Opponent Points
-                NotLostPoint = [True, True, True]
-                for next_move in nb1.legal_moves:
+                NLP1 = [True, True, True]
+                for next_move in nb2.legal_moves:
                     point_mod = 0
-                    if (nb1.is_capture(next_move)) & (NotLostPoint[0]):
+                    if (nb2.is_capture(next_move)) & (NLP1[0]):
                         point_mod += self.SuicidePoints
-                        NotLostPoint[0] = False
-                    if (nb1.gives_check(next_move)) & (NotLostPoint[1]):
+                        NLP1[0] = False
+                    if (nb2.gives_check(next_move)) & (NLP1[1]):
                         point_mod += self.OpensCheckPoints
-                        NotLostPoint[1] = False
+                        NLP1[1] = False
                     opp_pts += point_mod
 
                 # POP OPPONENT MOVE
-                nb1.pop()
+                nb2.pop()
 
                 all_opp_pts.append(opp_pts)
 
             # Find and Make Opponent's Optimal Move
-            if len(list(nb1.legal_moves)) != 0:
-                optimal_opp_move = list(nb1.legal_moves)[np.argmax(all_opp_pts)]
-                nb1.push(optimal_opp_move)
+            nb3 = nb1
+            if len(list(nb3.legal_moves)) != 0:
+                optimal_opp_move = list(nb3.legal_moves)[np.argmax(all_opp_pts)]
+                nb3.push(optimal_opp_move)
 
                 # GET POINTS FOR ALL MY NEXT MOVES
-                for next_move in nb1.legal_moves:
+                cap_pts_mod = 0
+                piece_pts_mod = 0
+                check_pts_mod = 0
+                promo_pts_mod = 0
+                fork_pts_mod = 0
+                rdy_cap_mod = 0
+                sub_pts_mod = 0
+
+                for next_move in nb3.legal_moves:
 
                     # Add My Points
-                    if nb1.is_capture(next_move):
+                    if nb3.is_capture(next_move):
                         # Base Capture Point Addition
-                        my_pts += self.CapturePoints
+                        cap_pts_mod += self.CapturePoints
+                        if cap_pts_mod > self.CapturePoints:
+                            cap_pts_mod = self.CapturePoints
                         # Additional Bonus based on piece type
                         try:
-                            my_pts += self.PiecePoints[nb1.piece_at(next_move.to_square).piece_type]
+                            piece_pts_mod += self.PiecePoints[nb3.piece_at(next_move.to_square).piece_type]
                         except KeyError:
-                            my_pts += 0
+                            piece_pts_mod += 0
                         except AttributeError:
-                            my_pts += 0
-                    if nb1.gives_check(next_move):
-                        my_pts += self.CheckPoints
+                            piece_pts_mod += 0
+
+                        try:
+                            if piece_pts_mod > self.PiecePoints[nb3.piece_at(next_move.to_square).piece_type]:
+                                piece_pts_mod = self.PiecePoints[nb3.piece_at(next_move.to_square).piece_type]
+                        except KeyError:
+                            piece_pts_mod += 0
+                        except AttributeError:
+                            piece_pts_mod += 0
+
+                    if nb3.gives_check(next_move):
+                        check_pts_mod += self.CheckPoints
+                        if check_pts_mod > self.CheckPoints:
+                            check_pts_mod = self.CheckPoints
                     if move.promotion:
-                        my_pts += self.PromotionPoints
+                        promo_pts_mod += self.PromotionPoints
+                        if promo_pts_mod > self.PromotionPoints:
+                            promo_pts_mod = self.PromotionPoints
                     # I ignored repeat penalty because it sounds hard to make work rn
 
                     # MAKE MY NEXT MOVE
-                    nb1.push(next_move)
+
+                    nb4 = nb1
+                    nb4.push(next_move)
+
+                    if board.is_checkmate():
+                        my_pts += self.OpensCheckmatePoints
 
                     # ADD ATTACK BONUSES
                     num_attacks = 0
-                    for spot in list(nb1.attacks(next_move.to_square)):
-                        if (nb1.color_at(spot) != nb1.turn) & (nb1.color_at(spot) is not None):
+                    for spot in list(nb4.attacks(next_move.to_square)):
+                        if (nb4.color_at(spot) != nb4.turn) & (nb4.color_at(spot) is not None):
                             num_attacks += 1
                     if num_attacks >= 2:
-                        my_pts += self.ForkPoints
+                        fork_pts_mod += self.ForkPoints
+                        if fork_pts_mod > self.ForkPoints:
+                            fork_pts_mod = self.ForkPoints
                     elif num_attacks == 1:
-                        my_pts += self.ReadyToCapturePoints
+                        rdy_cap_mod += self.ReadyToCapturePoints
+                        if rdy_cap_mod > self.ReadyToCapturePoints:
+                            rdy_cap_mod = self.ReadyToCapturePoints
 
                     # SUBTRACT MY POINTS
-                    NotLostPoint = [True, True, True]
-                    for opp_next_move in nb1.legal_moves:
+                    NLP2 = [True, True, True]
+                    point_mod = 0
+                    for opp_next_move in nb4.legal_moves:
                         point_mod = 0
-                        if (nb1.is_capture(opp_next_move)) & (NotLostPoint[0]):
+                        if (nb4.is_capture(opp_next_move)) & (NLP2[0]):
                             point_mod += self.SuicidePoints
-                            NotLostPoint[0] = False
-                        if (nb1.gives_check(opp_next_move)) & (NotLostPoint[1]):
+                            NLP2[0] = False
+                        if (nb4.gives_check(opp_next_move)) & (NLP2[1]):
                             point_mod += self.OpensCheckPoints
-                            NotLostPoint[1] = False
-                        my_pts += point_mod
+                            NLP2[1] = False
+                        sub_pts_mod += point_mod
+
+                    if sub_pts_mod < (self.SuicidePoints + self.OpensCheckPoints):
+                        sub_pts_mod = point_mod
 
                     # POP MY NEXT MOVE
-                    nb1.pop()
+                    nb4.pop()
 
+                my_pts += sub_pts_mod
+                my_pts += cap_pts_mod
+                my_pts += piece_pts_mod
+                my_pts += check_pts_mod
+                my_pts += promo_pts_mod
+                my_pts += fork_pts_mod
+                my_pts += rdy_cap_mod
                 # POP OPPONENT MOVE
                 nb1.pop()
 
             # POP MY MOVE
-            nb1.pop()
-
+            nb3.pop()
 
             return my_pts
 
-        # print(chess.Board(board.fen()))
         return my_pts

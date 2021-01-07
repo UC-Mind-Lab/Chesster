@@ -11,7 +11,7 @@ from ..timer.base import BaseTimer
 
 class TylerWestlandAI(BaseAI):
     """This AI's plan:
-    Do a minimax with a depth of 1.
+    Do a minimax with a depth of an arbitrary depth.
 
     """
     @staticmethod
@@ -149,38 +149,46 @@ class TylerWestlandAI(BaseAI):
         return random.choice(scored_moves[max_score])
 
 
-    def minimax(self, board:chess.Board) -> chess.Move:
-        """Calculate minimax move
+    def minimax(self, board:chess.Board, depth=2):
+        """Return the minimax move with an arbitrary depth.
 
         Parameters
         ----------
         board: chess.Board
             The chessboard to analyze and make a move upon.
+        depth: int
+            The depth of half-moves to go to.
 
         Returns
         -------
-        chess.Move
-            Move to make.
+        int, chess.Move
+            Score of the move, and move to make.
         """
-        best_move = (-np.inf, None)
+        depth -= 1
+        scores = list()
         for move in board.legal_moves:
-            # Get the score for the move
             board.push(move)
-            score = self.simple_board_score(board)
-            # Get the scores for opponents moves
-            max_score = np.inf
-            for op_move in board.legal_moves:
-                board.push(op_move)
-                max_score = min(max_score,
-                        self.simple_board_score(board))
-                board.pop()
-            # Clean up for next loop of own move
+            if depth <= 0:
+                scores.append(
+                        (move,
+                            self.simple_board_score(board)))
+            else:
+                deeper_move, deeper_score = self.minimax(board, depth)
+                if deeper_score is not None:
+                    scores.append((move, deeper_score))
+                else:
+                    scores.append(
+                            (move,
+                                self.simple_board_score(board)))
             board.pop()
-            best_move = max(
-                    (best_move, (max_score, move)),
-                    key=lambda tup: tup[0]
-                    )
-        return best_move[1]
+           
+        if len(scores) == 0:
+            return None, None
+        else:
+            if board.turn == self.color:
+                return max(scores, key=lambda s: s[1])
+            else:
+                return min(scores, key=lambda s: s[1])
 
 
     def make_move(self, board:chess.Board, timer:BaseTimer) -> chess.Move:
@@ -201,6 +209,8 @@ class TylerWestlandAI(BaseAI):
         # Save the color of ourself, so that we always know it.
         self.color = board.turn
 
+        m = self.minimax(board, depth=3)
+
         # Make the move
-        return self.minimax(board)
+        return m[0]
 

@@ -20,7 +20,7 @@ class IllegalMove(Exception):
     @property
     def offending_color(self) -> chess.Color:
         """The color that made the illegal move"""
-        return self.board.color
+        return self.board.turn
 
 
     @property
